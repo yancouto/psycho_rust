@@ -3,6 +3,7 @@
 mod circle_drawer;
 mod quickplay;
 mod screen;
+mod transform;
 
 use amethyst::{
     prelude::*,

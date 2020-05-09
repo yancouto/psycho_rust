@@ -14,13 +14,11 @@
 //! each circle, two of them are clearly repeated. Other than that, the color
 //! is always the same for these 6 vertices, so it is unnecessarily copied 5 times!
 //! I don't know if there's an easy way to fix this (or if it matters that much).
-use crate::screen::{HEIGHT, WIDTH};
 use amethyst::{
     core::ecs::{
         Component, DenseVecStorage, DispatcherBuilder, Join, ReadStorage, SystemData, World,
     },
     core::math::Vector2,
-    core::transform::Transform,
     prelude::*,
     renderer::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
@@ -41,9 +39,11 @@ use amethyst::{
         util, ChangeDetection,
     },
 };
+use glsl_layout::*;
 use lazy_static::lazy_static;
 
-use glsl_layout::*;
+use crate::screen::{HEIGHT, WIDTH};
+use crate::transform::Transform;
 
 fn compile_shader(code: &'static str, kind: shaderc::ShaderKind) -> shaderc::CompilationArtifact {
     let mut compiler = shaderc::Compiler::new().unwrap();
@@ -171,6 +171,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCircles {
         _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> amethyst::Result<()> {
         world.register::<Circle>();
+        world.register::<Transform>();
         Ok(())
     }
 
@@ -304,25 +305,31 @@ impl Component for Circle {
 impl Circle {
     /// Helper function to convert triangle into 3 vertices
     pub fn get_vertices(&self, t: &Transform) -> Vec<CircleArgs> {
-        let (c, r) = (t.translation(), self.radius);
+        let (c, r) = (t.0, self.radius);
         // TODO: Add colors
         let color = [1., 1., 1., 1.].into();
-        let square = vec![[-1., -1.], [-1., 1.], [1., 1.], [1., -1.]];
+        let square = vec![
+            Vector2::new(-1., -1.),
+            Vector2::new(-1., 1.),
+            Vector2::new(1., 1.),
+            Vector2::new(1., -1.),
+        ];
         let square = vec![
             square[0], square[1], square[2], square[0], square[2], square[3],
         ];
         square
             .into_iter()
-            .map(|x| {
+            .map(|rel| {
                 // Creating edge of the square
-                let p = Vector2::new(c[0] + r * x[0], c[1] + r * x[1]);
+                let p = c + r * rel;
                 // Transformation from (0, 0) -> (W, H) to (-1, -1) -> (1, 1)
                 let p = (p - Vector2::new(WIDTH / 2., HEIGHT / 2.))
+                    .coords
                     .component_div(&Vector2::new(WIDTH / 2., HEIGHT / 2.));
                 CircleArgs {
                     pos: [p.x, p.y].into(),
                     color,
-                    rel: x.into(),
+                    rel: [rel.x, rel.y].into(),
                 }
             })
             .collect()

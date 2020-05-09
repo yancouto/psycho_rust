@@ -1,44 +1,17 @@
 //! Quickplay state
 
-use amethyst::{
-    core::transform::Transform,
-    prelude::*,
-};
+use amethyst::prelude::*;
 
 use crate::circle_drawer::Circle;
+use crate::transform::Transform;
 
-trait Transform2D {
-    fn set_translation_xy(&mut self, x: f32, y: f32) -> &mut Self;
-    fn from_xy(x: f32, y: f32) -> Self;
-}
-
-impl Transform2D for Transform {
-    fn set_translation_xy(&mut self, x: f32, y: f32) -> &mut Self {
-        self.set_translation_xyz(x, y, 0.)
-    }
-
-    fn from_xy(x: f32, y: f32) -> Self {
-        let mut t = Self::default();
-        t.set_translation_xy(x, y);
-        t
-    }
-}
+use crate::screen::{WIDTH as W, HEIGHT as H};
 
 fn initialize_balls(world: &mut World) {
     world
         .create_entity()
-        .with(Circle { radius: 25. })
-        .with(Transform::from_xy(75., 25.))
-        .build();
-    world
-        .create_entity()
-        .with(Circle { radius: 25. })
-        .with(Transform::from_xy(25., 75.))
-        .build();
-    world
-        .create_entity()
-        .with(Circle { radius: 25. })
-        .with(Transform::from_xy(75., 75.))
+        .with(Circle { radius: 100. })
+        .with(Transform::new(W / 2., H / 2.))
         .build();
 }
 
