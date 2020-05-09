@@ -2333,6 +2333,7 @@ dependencies = [
  "failure",
  "glsl-layout",
  "lazy_static",
+ "shaderc",
 ]
 
 [[package]]
@@ -3151,6 +3152,26 @@ checksum = "2c4ccb6d0d32d277d3ef7dea86203d8210945eb7a45fba89dd445b3595dd0dfc"
 dependencies = [
  "cmake",
  "pkg-config",
+]
+
+[[package]]
+name = "shaderc"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed344938df2d7fa3cc6bfb4af0b578f00f9b389d5fe7be0250fa657c442a8281"
+dependencies = [
+ "libc",
+ "shaderc-sys",
+]
+
+[[package]]
+name = "shaderc-sys"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30075c712b08798cb2b5e54e4434970a4a3a3a3e838b0642590c74605d3cc528"
+dependencies = [
+ "cmake",
+ "libc",
 ]
 
 [[package]]

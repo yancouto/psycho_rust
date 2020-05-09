@@ -39,20 +39,28 @@ use amethyst::{
         util, ChangeDetection,
     },
 };
+use lazy_static::lazy_static;
 
 use glsl_layout::*;
 
-lazy_static::lazy_static! {
+fn compile_shader(code: &'static str, kind: shaderc::ShaderKind) -> shaderc::CompilationArtifact {
+    let mut compiler = shaderc::Compiler::new().unwrap();
+    compiler
+        .compile_into_spirv(code, kind, "shader.glsl", "main", None)
+        .expect("Failed to compile shader")
+}
+
+lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
     static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
-        include_bytes!("../assets/shaders/circle.vert.spv"),
+        compile_shader(include_str!("../assets/shaders/circle.vert"), shaderc::ShaderKind::Vertex).as_binary_u8(),
         ShaderStageFlags::VERTEX,
         "main",
     ).unwrap();
 
     static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
-        include_bytes!("../assets/shaders/circle.frag.spv"),
+        compile_shader(include_str!("../assets/shaders/circle.frag"), shaderc::ShaderKind::Fragment).as_binary_u8(),
         ShaderStageFlags::FRAGMENT,
         "main",
     ).unwrap();
