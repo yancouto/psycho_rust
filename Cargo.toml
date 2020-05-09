@@ -5,7 +5,10 @@ authors = []
 edition = "2018"
 
 [dependencies]
-amethyst = "0.15.0"
+amethyst = "0.15"
+glsl-layout = "0.3.2"
+lazy_static = "1.4"
+failure = "0.1.8"
 
 [features]
 default = ["metal"]
