@@ -1,4 +1,4 @@
 (
   title: "PsyChO: The Ball",
-  dimensions: Some((500, 500)),
+  dimensions: Some((1366, 768)),
 )

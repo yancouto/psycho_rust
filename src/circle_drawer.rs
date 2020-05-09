@@ -14,10 +14,12 @@
 //! each circle, two of them are clearly repeated. Other than that, the color
 //! is always the same for these 6 vertices, so it is unnecessarily copied 5 times!
 //! I don't know if there's an easy way to fix this (or if it matters that much).
+use crate::screen::{HEIGHT, WIDTH};
 use amethyst::{
     core::ecs::{
         Component, DenseVecStorage, DispatcherBuilder, Join, ReadStorage, SystemData, World,
     },
+    core::math::Vector2,
     core::transform::Transform,
     prelude::*,
     renderer::{
@@ -311,10 +313,17 @@ impl Circle {
         ];
         square
             .into_iter()
-            .map(|x| CircleArgs {
-                pos: [c[0] + r * x[0], c[1] + r * x[1]].into(),
-                color: color,
-                rel: x.into(),
+            .map(|x| {
+                // Creating edge of the square
+                let p = Vector2::new(c[0] + r * x[0], c[1] + r * x[1]);
+                // Transformation from (0, 0) -> (W, H) to (-1, -1) -> (1, 1)
+                let p = (p - Vector2::new(WIDTH / 2., HEIGHT / 2.))
+                    .component_div(&Vector2::new(WIDTH / 2., HEIGHT / 2.));
+                CircleArgs {
+                    pos: [p.x, p.y].into(),
+                    color,
+                    rel: x.into(),
+                }
             })
             .collect()
     }
