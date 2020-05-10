@@ -2345,6 +2345,7 @@ dependencies = [
  "failure",
  "glsl-layout",
  "lazy_static",
+ "log",
  "serde",
  "shaderc",
 ]

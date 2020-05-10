@@ -1,6 +1,7 @@
 //! Quickplay state
 
 use amethyst::prelude::*;
+use log::info;
 
 use crate::{
     components::{Circle, Player, Transform},
@@ -20,7 +21,7 @@ pub struct Quickplay;
 
 impl SimpleState for Quickplay {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        println!("Started!");
+        info!("Started quickplay!");
         let world = data.world;
         initialize_balls(world);
     }

@@ -14,7 +14,7 @@ use amethyst::{
 };
 use display::circle_drawer::RenderCircles;
 use input::PsychoBindingTypes;
-use states::Quickplay;
+use states::MainMenu;
 use player::PlayerMoveSystem;
 
 fn main() -> amethyst::Result<()> {
@@ -34,7 +34,7 @@ fn main() -> amethyst::Result<()> {
                 .with_bindings_from_file(app_root.join("config/bindings.ron"))?,
         )?
         .with(PlayerMoveSystem, "player_move_system", &["input_system"]);
-    let mut game = Application::new(app_root.join("assets"), Quickplay, game_data)?;
+    let mut game = Application::new(app_root.join("assets"), MainMenu, game_data)?;
     game.run();
     Ok(())
 }
