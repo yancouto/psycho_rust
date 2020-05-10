@@ -28,7 +28,7 @@ impl SimpleState for MainMenu {
             ..
         }) = event
         {
-            Trans::Switch(Box::new(Quickplay))
+            Trans::Switch(Box::new(Quickplay::default()))
         } else {
             Trans::None
         }
