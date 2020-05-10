@@ -6,6 +6,7 @@ use log::*;
 
 use crate::states::Quickplay;
 
+#[derive(Default)]
 pub struct MainMenu;
 
 impl SimpleState for MainMenu {
