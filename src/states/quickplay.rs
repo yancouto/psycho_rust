@@ -11,13 +11,19 @@ use crate::{
 fn initialize_balls(world: &mut World) {
     world
         .create_entity()
-        .with(Circle { radius: 100. })
+        .with(Circle {
+            radius: 100.,
+            color: [0.3, 0.4, 1.],
+        })
         .with(Transform::new(W / 2., H / 2.))
         .with(Player)
         .build();
     world
         .create_entity()
-        .with(Circle { radius: 10. })
+        .with(Circle {
+            radius: 10.,
+            color: [0.8, 0.2, 0.],
+        })
         .with(Transform::new(10., 10.))
         .with(Moving::new(10., 0.))
         .build();

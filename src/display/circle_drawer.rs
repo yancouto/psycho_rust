@@ -296,8 +296,7 @@ impl Circle {
     /// Helper function to convert triangle into 3 vertices
     pub fn get_vertices(&self, t: &Transform) -> Vec<CircleArgs> {
         let (c, r) = (t.0, self.radius);
-        // TODO: Add colors
-        let color = [1., 1., 1., 1.].into();
+        let color = [self.color[0], self.color[1], self.color[2], 1.].into();
         let square = vec![
             Vector2::new(-1., -1.),
             Vector2::new(-1., 1.),
