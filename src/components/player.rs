@@ -1,8 +1,5 @@
-use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::ecs::{Component, NullStorage};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
+#[storage(NullStorage)]
 pub struct Player;
-
-impl Component for Player {
-    type Storage = DenseVecStorage<Self>;
-}
