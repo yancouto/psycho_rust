@@ -3,6 +3,7 @@ use amethyst::ecs::{Component, DenseVecStorage};
 
 pub type Position = Point2<f32>;
 
+#[derive(Debug)]
 pub struct Transform(pub Position);
 
 impl Component for Transform {
