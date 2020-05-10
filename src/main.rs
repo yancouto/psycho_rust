@@ -3,8 +3,9 @@
 mod components;
 mod display;
 mod input;
-mod states;
 mod player;
+mod states;
+mod systems;
 
 use amethyst::{
     input::InputBundle,
@@ -14,8 +15,9 @@ use amethyst::{
 };
 use display::circle_drawer::RenderCircles;
 use input::PsychoBindingTypes;
-use states::MainMenu;
 use player::PlayerMoveSystem;
+use states::MainMenu;
+use systems::MovingSystem;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -33,7 +35,8 @@ fn main() -> amethyst::Result<()> {
             InputBundle::<PsychoBindingTypes>::new()
                 .with_bindings_from_file(app_root.join("config/bindings.ron"))?,
         )?
-        .with(PlayerMoveSystem, "player_move_system", &["input_system"]);
+        .with(PlayerMoveSystem, "player_move_system", &["input_system"])
+        .with(MovingSystem, "moving_system", &[]);
     let mut game = Application::new(app_root.join("assets"), MainMenu, game_data)?;
     game.run();
     Ok(())

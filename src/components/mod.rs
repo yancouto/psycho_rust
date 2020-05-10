@@ -4,4 +4,4 @@ pub mod transform;
 
 pub use circle::Circle;
 pub use player::Player;
-pub use transform::Transform;
+pub use transform::{Transform, Moving};

@@ -4,7 +4,7 @@ use amethyst::prelude::*;
 use log::info;
 
 use crate::{
-    components::{Circle, Player, Transform},
+    components::{Circle, Moving, Player, Transform},
     display::{HEIGHT as H, WIDTH as W},
 };
 
@@ -14,6 +14,12 @@ fn initialize_balls(world: &mut World) {
         .with(Circle { radius: 100. })
         .with(Transform::new(W / 2., H / 2.))
         .with(Player)
+        .build();
+    world
+        .create_entity()
+        .with(Circle { radius: 10. })
+        .with(Transform::new(10., 10.))
+        .with(Moving::new(10., 0.))
         .build();
 }
 
