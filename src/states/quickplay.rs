@@ -1,21 +1,11 @@
 //! Quickplay state
 
-use amethyst::{
-    ecs::{Component, DenseVecStorage},
-    prelude::*,
+use amethyst::prelude::*;
+
+use crate::{
+    components::{Circle, Player, Transform},
+    display::{HEIGHT as H, WIDTH as W},
 };
-
-use crate::circle_drawer::Circle;
-use crate::transform::Transform;
-
-use crate::screen::{HEIGHT as H, WIDTH as W};
-
-#[derive(Debug, Default)]
-pub struct Player;
-
-impl Component for Player {
-    type Storage = DenseVecStorage<Self>;
-}
 
 fn initialize_balls(world: &mut World) {
     world

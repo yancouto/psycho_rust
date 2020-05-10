@@ -15,9 +15,7 @@
 //! is always the same for these 6 vertices, so it is unnecessarily copied 5 times!
 //! I don't know if there's an easy way to fix this (or if it matters that much).
 use amethyst::{
-    core::ecs::{
-        Component, DenseVecStorage, DispatcherBuilder, Join, ReadStorage, SystemData, World,
-    },
+    core::ecs::{DispatcherBuilder, Join, ReadStorage, SystemData, World},
     core::math::Vector2,
     prelude::*,
     renderer::{
@@ -42,8 +40,10 @@ use amethyst::{
 use glsl_layout::*;
 use lazy_static::lazy_static;
 
-use crate::screen::{HEIGHT, WIDTH};
-use crate::transform::Transform;
+use crate::{
+    components::{Circle, Transform},
+    display::{HEIGHT, WIDTH},
+};
 
 fn compile_shader(code: &'static str, kind: shaderc::ShaderKind) -> shaderc::CompilationArtifact {
     let mut compiler = shaderc::Compiler::new().unwrap();
@@ -56,13 +56,13 @@ lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
     static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
-        compile_shader(include_str!("../assets/shaders/circle.vert"), shaderc::ShaderKind::Vertex).as_binary_u8(),
+        compile_shader(include_str!("../../assets/shaders/circle.vert"), shaderc::ShaderKind::Vertex).as_binary_u8(),
         ShaderStageFlags::VERTEX,
         "main",
     ).unwrap();
 
     static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
-        compile_shader(include_str!("../assets/shaders/circle.frag"), shaderc::ShaderKind::Fragment).as_binary_u8(),
+        compile_shader(include_str!("../../assets/shaders/circle.frag"), shaderc::ShaderKind::Fragment).as_binary_u8(),
         ShaderStageFlags::FRAGMENT,
         "main",
     ).unwrap();
@@ -290,16 +290,6 @@ impl AsVertex for CircleArgs {
             (Format::Rg32Sfloat, "rel"),
         ))
     }
-}
-
-/// Component for the circles we wish to draw to the screen
-#[derive(Debug, Default)]
-pub struct Circle {
-    pub radius: f32,
-}
-
-impl Component for Circle {
-    type Storage = DenseVecStorage<Self>;
 }
 
 impl Circle {

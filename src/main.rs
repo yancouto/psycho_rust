@@ -1,11 +1,10 @@
 //! Psycho: The Ball
 
-mod bindings;
-mod circle_drawer;
-mod player_move;
-mod quickplay;
-mod screen;
-mod transform;
+mod components;
+mod display;
+mod input;
+mod states;
+mod player;
 
 use amethyst::{
     input::InputBundle,
@@ -13,10 +12,10 @@ use amethyst::{
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
 };
-use bindings::PsychoBindingTypes;
-use circle_drawer::RenderCircles;
-use player_move::PlayerMoveSystem;
-use quickplay::Quickplay;
+use display::circle_drawer::RenderCircles;
+use input::PsychoBindingTypes;
+use states::Quickplay;
+use player::PlayerMoveSystem;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

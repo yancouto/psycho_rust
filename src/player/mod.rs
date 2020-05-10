@@ -6,9 +6,8 @@ use amethyst::{
 };
 
 use crate::{
-    bindings::{AxisBinding, PsychoBindingTypes},
-    quickplay::Player,
-    transform::Transform,
+    components::{Player, Transform},
+    input::{AxisBinding, PsychoBindingTypes},
 };
 
 #[derive(SystemDesc)]
