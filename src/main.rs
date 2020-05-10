@@ -3,7 +3,6 @@
 mod components;
 mod display;
 mod input;
-mod player;
 mod states;
 mod systems;
 
@@ -15,9 +14,8 @@ use amethyst::{
 };
 use display::circle_drawer::RenderCircles;
 use input::PsychoBindingTypes;
-use player::PlayerMoveSystem;
 use states::MainMenu;
-use systems::MovingSystem;
+use systems::{MovingSystem, PlayerMoveSystem};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
