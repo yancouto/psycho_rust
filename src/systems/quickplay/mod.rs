@@ -1,7 +1,7 @@
 use amethyst::{
     core::timing::Time,
     derive::SystemDesc,
-    ecs::{Entities, Read, System, SystemData, WriteStorage},
+    ecs::{Entities, LazyUpdate, Read, System, SystemData},
     prelude::*,
 };
 
@@ -21,29 +21,19 @@ impl Default for EnemySpawnSystem {
 }
 
 impl<'s> System<'s> for EnemySpawnSystem {
-    type SystemData = (
-        Read<'s, Time>,
-        Entities<'s>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, Circle>,
-        WriteStorage<'s, Moving>,
-    );
+    type SystemData = (Read<'s, Time>, Entities<'s>, Read<'s, LazyUpdate>);
 
-    fn run(&mut self, (time, entities, mut transforms, mut circles, mut movings): Self::SystemData) {
+    fn run(&mut self, (time, entities, lazy): Self::SystemData) {
         self.until_next_enemy -= time.delta_seconds();
         if self.until_next_enemy <= 0. {
             self.until_next_enemy = 3.;
-            entities
-                .build_entity()
-                .with(Transform::new(10., 10.), &mut transforms)
-                .with(
-                    Circle {
-                        radius: 10.,
-                        color: [0.9, 0.1, 0.1],
-                    },
-                    &mut circles,
-                )
-                .with(Moving::new(10., 0.), &mut movings)
+            lazy.create_entity(&entities)
+                .with(Transform::new(10., 10.))
+                .with(Circle {
+                    radius: 10.,
+                    color: [0.9, 0.1, 0.1],
+                })
+                .with(Moving::new(10., 0.))
                 .build();
         }
     }
