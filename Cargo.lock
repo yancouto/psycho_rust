@@ -2346,6 +2346,7 @@ dependencies = [
  "glsl-layout",
  "lazy_static",
  "log",
+ "rayon",
  "serde",
  "shaderc",
 ]

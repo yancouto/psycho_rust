@@ -12,8 +12,11 @@ use crate::{
     components::{Circle, Player, Transform},
     display::{HEIGHT as H, WIDTH as W},
     states::MainMenu,
-    systems::player::ShootSystem,
-    systems::quickplay::EnemySpawnSystem,
+    systems::{
+        player::ShootSystem,
+        quickplay::EnemySpawnSystem,
+        gameplay::CollisionSystem,
+    },
 };
 
 #[derive(Default)]
@@ -44,6 +47,7 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
         let mut builder = DispatcherBuilder::new();
         builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
         builder.add(ShootSystem::default(), "shoot", &[]);
+        builder.add(CollisionSystem::default(), "collision", &[]);
         let mut dispatch = builder
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
             .build();

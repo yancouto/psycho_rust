@@ -7,7 +7,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{Circle, Moving, Player, Transform},
+    components::{Circle, Moving, Player, Transform, Shot},
     input::{ActionBinding, PsychoBindingTypes},
 };
 
@@ -62,6 +62,7 @@ impl<'s> System<'s> for ShootSystem {
                         color: [0.1, 0.1, 0.9],
                     })
                     .with(Moving::from(dir * shot_speed))
+                    .with(Shot)
                     .build();
             }
         }

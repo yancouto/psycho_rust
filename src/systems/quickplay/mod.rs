@@ -5,7 +5,7 @@ use amethyst::{
     prelude::*,
 };
 
-use crate::components::{Circle, Moving, Transform};
+use crate::components::{Circle, Moving, Transform, Enemy};
 
 #[derive(SystemDesc)]
 pub struct EnemySpawnSystem {
@@ -34,6 +34,7 @@ impl<'s> System<'s> for EnemySpawnSystem {
                     color: [0.9, 0.1, 0.1],
                 })
                 .with(Moving::new(10., 0.))
+                .with(Enemy)
                 .build();
         }
     }
