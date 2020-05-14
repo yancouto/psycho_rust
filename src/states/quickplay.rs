@@ -2,7 +2,7 @@
 
 use amethyst::{
     core::ArcThreadPool,
-    ecs::{Dispatcher, DispatcherBuilder, world::EntitiesRes, Entity},
+    ecs::{world::EntitiesRes, Dispatcher, DispatcherBuilder, Entity},
     prelude::*,
     winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
 };
@@ -12,6 +12,7 @@ use crate::{
     components::{Circle, Player, Transform},
     display::{HEIGHT as H, WIDTH as W},
     states::MainMenu,
+    systems::player::ShootSystem,
     systems::quickplay::EnemySpawnSystem,
 };
 
@@ -42,6 +43,7 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
         info!("Started quickplay!");
         let mut builder = DispatcherBuilder::new();
         builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
+        builder.add(ShootSystem::default(), "shoot", &[]);
         let mut dispatch = builder
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
             .build();

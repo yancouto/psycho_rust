@@ -19,19 +19,21 @@ use systems::{MovingSystem, PlayerMoveSystem};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let app_root = application_root_dir()?;
+    let app_root = application_root_dir().expect("Failed to get app root dir");
     let game_data = GameDataBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(app_root.join("config/display.ron"))?
+                    RenderToWindow::from_config_path(app_root.join("config/display.ron"))
+                        .expect("Failed to read display config")
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderCircles),
         )?
         .with_bundle(
             InputBundle::<PsychoBindingTypes>::new()
-                .with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+                .with_bindings_from_file(app_root.join("config/bindings.ron"))
+                .expect("Failed to read bindings"),
         )?
         .with(PlayerMoveSystem, "player_move_system", &["input_system"])
         .with(MovingSystem, "moving_system", &[]);

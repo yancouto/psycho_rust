@@ -1,4 +1,4 @@
-use amethyst::input::{BindingTypes};
+use amethyst::input::BindingTypes;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,9 @@ pub enum AxisBinding {
 }
 
 #[derive(Clone, Debug, Display, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ActionBinding {}
+pub enum ActionBinding {
+    Shoot,
+}
 
 #[derive(Debug)]
 pub struct PsychoBindingTypes;

@@ -3,5 +3,7 @@
     Vertical: Emulated(pos: Key(W), neg: Key(S)),
     Horizontal: Emulated(pos: Key(D), neg: Key(A)),
   },
-  actions: {},
+  actions: {
+      Shoot: [[Mouse(Left)]],
+  },
 )
