@@ -15,7 +15,7 @@ use crate::{
     systems::{
         player::ShootSystem,
         quickplay::EnemySpawnSystem,
-        gameplay::CollisionSystem,
+        gameplay::{CollisionSystem, LeaveScreenSystem},
     },
 };
 
@@ -48,6 +48,7 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
         builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
         builder.add(ShootSystem::default(), "shoot", &[]);
         builder.add(CollisionSystem::default(), "collision", &[]);
+        builder.add(LeaveScreenSystem::default(), "leave_screen", &[]);
         let mut dispatch = builder
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
             .build();

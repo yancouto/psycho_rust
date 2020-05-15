@@ -35,8 +35,8 @@ fn main() -> amethyst::Result<()> {
                 .with_bindings_from_file(app_root.join("config/bindings.ron"))
                 .expect("Failed to read bindings"),
         )?
-        .with(PlayerMoveSystem, "player_move_system", &["input_system"])
-        .with(MovingSystem, "moving_system", &[]);
+        .with(PlayerMoveSystem, "player_move", &["input_system"])
+        .with(MovingSystem, "moving", &[]);
     let mut game = Application::new(app_root.join("assets"), MainMenu, game_data)?;
     game.run();
     Ok(())
