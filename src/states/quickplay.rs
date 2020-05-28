@@ -11,18 +11,29 @@ use log::info;
 use crate::{
     components::{Circle, Player, Transform},
     display::{HEIGHT as H, WIDTH as W},
+    editor::executor::LevelExecutorSystem,
     states::MainMenu,
     systems::{
+        gameplay::{CollisionSystem, LeaveScreenSystem},
         player::ShootSystem,
         quickplay::EnemySpawnSystem,
-        gameplay::{CollisionSystem, LeaveScreenSystem},
     },
 };
 
-#[derive(Default)]
 pub struct Quickplay<'a, 'b> {
+    level_name: String,
     dispatcher: Option<Dispatcher<'a, 'b>>,
     player: Option<Entity>,
+}
+
+impl<'a, 'b> Quickplay<'a, 'b> {
+    pub fn new(level_name: String) -> Self {
+        Self {
+            level_name,
+            dispatcher: None,
+            player: None,
+        }
+    }
 }
 
 impl<'a, 'b> Quickplay<'a, 'b> {
@@ -43,9 +54,14 @@ impl<'a, 'b> Quickplay<'a, 'b> {
 
 impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
     fn on_start(&mut self, data: StateData<GameData>) {
-        info!("Started quickplay!");
+        info!("Started quickplay on level {}!", self.level_name);
         let mut builder = DispatcherBuilder::new();
-        builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
+        builder.add(
+            LevelExecutorSystem::from_lua(&self.level_name),
+            "level_exec",
+            &[],
+        );
+        //builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
         builder.add(ShootSystem::default(), "shoot", &[]);
         builder.add(CollisionSystem::default(), "collision", &[]);
         builder.add(LeaveScreenSystem::default(), "leave_screen", &[]);

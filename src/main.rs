@@ -2,6 +2,7 @@
 
 mod components;
 mod display;
+mod editor;
 mod input;
 mod states;
 mod systems;
@@ -11,6 +12,7 @@ use amethyst::{
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
+    LogLevelFilter, LoggerConfig,
 };
 use display::circle_drawer::RenderCircles;
 use input::PsychoBindingTypes;
@@ -18,7 +20,10 @@ use states::MainMenu;
 use systems::{MovingSystem, PlayerMoveSystem};
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    amethyst::start_logger(LoggerConfig {
+        level_filter: LogLevelFilter::Debug,
+        ..Default::default()
+    });
     let app_root = application_root_dir().expect("Failed to get app root dir");
     let game_data = GameDataBuilder::default()
         .with_bundle(
