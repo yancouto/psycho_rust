@@ -1,5 +1,6 @@
 use amethyst::core::math::{Point2, Vector2};
 use derive_more::Display;
+use crate::editor::reader::{EnemyType, FormationEvent, LevelEvent, Level};
 use failure::{bail, Error, Fail, ResultExt};
 use rlua::{
     Context, Error as LuaErrorInner, Function, Lua, RegistryKey, Result as LuaResult, Table,
@@ -7,32 +8,8 @@ use rlua::{
 };
 use std::{fs, iter::Iterator, path::Path};
 
-#[derive(Debug, Clone)]
-pub enum EnemyType {
-    SimpleBall,
-}
-
-impl UserData for EnemyType {}
-
-#[derive(Debug, Clone)]
-pub enum LevelEvent {
-    Wait(f32),
-    Formation(FormationEvent),
-}
-
-#[derive(Debug, Clone)]
-pub enum FormationEvent {
-    Single {
-        enemy: EnemyType,
-        pos: Point2<f32>,
-        speed: Vector2<f32>,
-    },
-}
-
 #[derive(Debug, Copy, Clone)]
 struct Vec2(f32, f32);
-
-impl UserData for Vec2 {}
 
 impl From<Vec2> for Vector2<f32> {
     fn from(v: Vec2) -> Self {
@@ -47,8 +24,8 @@ impl From<Vec2> for Point2<f32> {
 }
 
 impl UserData for LevelEvent {}
-
-pub trait Level: Iterator<Item = LevelEvent> {}
+impl UserData for EnemyType {}
+impl UserData for Vec2 {}
 
 fn create_level_manager(ctx: Context) -> LuaResult<Table> {
     let t = ctx.create_table()?;

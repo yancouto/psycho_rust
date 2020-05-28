@@ -1,4 +1,5 @@
 //! Psycho: The Ball
+#![allow(warnings)]
 
 mod components;
 mod display;
