@@ -54,6 +54,7 @@ fn create_formations(ctx: Context) -> LuaResult<Table> {
                 enemy: data.get::<_, EnemyType>("enemy")?,
                 pos: data.get::<_, Vec2>("pos")?.into(),
                 speed: data.get::<_, Vec2>("speed")?.into(),
+                radius: data.get::<_, Option<f32>>("radius")?,
             }))
         })?,
     )?;

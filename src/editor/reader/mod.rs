@@ -14,6 +14,7 @@ pub enum FormationEvent {
         enemy: EnemyType,
         pos: Point2<f32>,
         speed: Vector2<f32>,
+        radius: Option<f32>,
     },
 }
 

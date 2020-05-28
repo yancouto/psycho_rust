@@ -94,11 +94,11 @@ impl<L: Level> LevelExecutorSystem<L> {
         (time, entities, lazy, ..): &<Self as System>::SystemData,
     ) {
         match event {
-            FormationEvent::Single { enemy, pos, speed } => {
+            FormationEvent::Single { enemy, pos, speed, radius } => {
                 lazy.create_entity(&entities)
                     .with(Transform::from(pos))
                     .with(Circle {
-                        radius: 10.,
+                        radius: radius.unwrap_or(10.),
                         color: [0.9, 0.1, 0.1],
                     })
                     .with(Moving::from(speed))

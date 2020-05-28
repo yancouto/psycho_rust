@@ -8,6 +8,7 @@ for i = 1, 3 do
         enemy = SB,
         pos = vec2(-20, HEIGHT/2),
         speed = vec2(10, 0),
+        radius = 10 * i,
     }
 end
 
