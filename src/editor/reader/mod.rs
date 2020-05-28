@@ -20,6 +20,7 @@ pub enum FormationEvent {
 #[derive(Debug, Clone)]
 pub enum LevelEvent {
     Wait(f32),
+    WaitUntilNoEnemies,
     Formation(FormationEvent),
 }
 pub trait Level: Iterator<Item = LevelEvent> {}

@@ -1,6 +1,9 @@
 use amethyst::core::math::{Point2, Vector2};
 use derive_more::Display;
-use crate::editor::reader::{EnemyType, FormationEvent, LevelEvent, Level};
+use crate::{
+    editor::reader::{EnemyType, FormationEvent, LevelEvent, Level},
+    display::{WIDTH, HEIGHT},
+};
 use failure::{bail, Error, Fail, ResultExt};
 use rlua::{
     Context, Error as LuaErrorInner, Function, Lua, RegistryKey, Result as LuaResult, Table,
@@ -32,6 +35,10 @@ fn create_level_manager(ctx: Context) -> LuaResult<Table> {
     t.set(
         "wait",
         ctx.create_function(|_, val: f32| Ok(LevelEvent::Wait(val)))?,
+    )?;
+    t.set(
+        "wait_until_no_enemies",
+        ctx.create_function(|_, _: ()| Ok(LevelEvent::WaitUntilNoEnemies))?,
     )?;
     ctx.load(include_str!("coroutine_wrapper.lua"))
         .eval::<Function>()?
@@ -83,6 +90,8 @@ impl LuaLevel {
                 "vec2",
                 ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?,
             )?;
+            globals.set("WIDTH", WIDTH)?;
+            globals.set("HEIGHT", HEIGHT)?;
 
             let fun = ctx
                 .load(

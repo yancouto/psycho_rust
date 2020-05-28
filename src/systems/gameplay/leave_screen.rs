@@ -44,7 +44,6 @@ impl<'s> System<'s> for LeaveScreenSystem {
             if in_screen.is_some() {
                 // kill if outside screen
                 if outside_screen {
-                    println!("Deleting {:?}", entity);
                     entities.delete(entity).unwrap();
                 }
             } else {

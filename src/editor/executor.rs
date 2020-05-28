@@ -1,7 +1,7 @@
 use amethyst::{
     core::timing::Time,
     derive::SystemDesc,
-    ecs::{Entities, LazyUpdate, Read, System, SystemData},
+    ecs::{Entities, LazyUpdate, Read, System, SystemData, ReadStorage},
     prelude::*,
     utils::application_root_dir,
 };
@@ -21,6 +21,8 @@ enum State {
     ReadyForInstruction,
     /// Sleeping for some amount of time before continuing
     Sleeping { until: Duration },
+    /// Sleep while there are enemies on screen
+    WaitUntilNoEnemies,
     /// Level execution is over
     Finished,
 }
@@ -49,10 +51,11 @@ impl LevelExecutorSystem<LuaLevel> {
 }
 
 impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
-    type SystemData = (Read<'s, Time>, Entities<'s>, Read<'s, LazyUpdate>);
+    type SystemData = (Read<'s, Time>, Entities<'s>, Read<'s, LazyUpdate>, ReadStorage<'s, Enemy>);
 
     fn run(&mut self, data: Self::SystemData) {
         let time = &data.0;
+        let enemies = &data.3;
         loop {
             match self.state {
                 // Finished -- do nothing
@@ -65,11 +68,19 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
                         return;
                     }
                 }
+                // NoEnemies -- continue waiting if there are enemies
+                State::WaitUntilNoEnemies => {
+                    if enemies.is_empty() {
+                        self.state = State::ReadyForInstruction;
+                    } else {
+                        return;
+                    }
+                }
                 // ReadyForInstruction - execute an instruction
                 State::ReadyForInstruction => {
                     let event = self.level.next();
                     debug!("Got event: {:?}", event);
-                    self.handle_level_event(event, &data);
+                    self.state = self.handle_level_event(event, &data);
                 }
             }
         }
@@ -80,7 +91,7 @@ impl<L: Level> LevelExecutorSystem<L> {
     fn handle_formation_event(
         &mut self,
         event: FormationEvent,
-        (time, entities, lazy): &<Self as System>::SystemData,
+        (time, entities, lazy, ..): &<Self as System>::SystemData,
     ) {
         match event {
             FormationEvent::Single { enemy, pos, speed } => {
@@ -101,24 +112,22 @@ impl<L: Level> LevelExecutorSystem<L> {
         &mut self,
         event: Option<LevelEvent>,
         data: &<Self as System>::SystemData,
-    ) {
+    ) -> State {
         let time = &data.0;
         match event {
             // Last event
-            None => {
-                self.state = State::Finished;
-            }
+            None =>  State::Finished,
             // Sleep for some amount of time
-            Some(LevelEvent::Wait(amount)) => {
-                self.state = State::Sleeping {
+            Some(LevelEvent::Wait(amount)) => State::Sleeping {
                     until: Duration::from_secs_f32(amount) + time.absolute_time(),
-                }
-            }
+                },
+            // Sleep until no enemies are on screen
+            Some(LevelEvent::WaitUntilNoEnemies) => State::WaitUntilNoEnemies,
             // Create a formation then execute the next event
             Some(LevelEvent::Formation(f)) => {
                 self.handle_formation_event(f, data);
-                self.state = State::ReadyForInstruction;
-            }
+                State::ReadyForInstruction
+            },
         }
     }
 }
