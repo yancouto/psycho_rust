@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use crate::{
     components::{Circle, Enemy, Moving, Transform},
-    editor::reader::{Level, LevelEvent, LuaLevel},
+    editor::reader::{EnemyType, FormationEvent, Level, LevelEvent, LuaLevel},
 };
 
 /// Indicates the current state of this level execution in the state machine
@@ -51,7 +51,8 @@ impl LevelExecutorSystem<LuaLevel> {
 impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
     type SystemData = (Read<'s, Time>, Entities<'s>, Read<'s, LazyUpdate>);
 
-    fn run(&mut self, (time, entities, lazy): Self::SystemData) {
+    fn run(&mut self, data: Self::SystemData) {
+        let time = &data.0;
         loop {
             match self.state {
                 // Finished -- do nothing
@@ -68,32 +69,55 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
                 State::ReadyForInstruction => {
                     let event = self.level.next();
                     debug!("Got event: {:?}", event);
-                    match event {
-                        // Last event
-                        None => {
-                            self.state = State::Finished;
-                        }
-                        // Create enemy and execute next event
-                        Some(LevelEvent::CreateEnemy) => {
-                            lazy.create_entity(&entities)
-                                .with(Transform::new(10., 10.))
-                                .with(Circle {
-                                    radius: 10.,
-                                    color: [0.9, 0.1, 0.1],
-                                })
-                                .with(Moving::new(10., 0.))
-                                .with(Enemy)
-                                .build();
-                            self.state = State::ReadyForInstruction;
-                        }
-                        // Sleep for some amount of time
-                        Some(LevelEvent::Wait(amount)) => {
-                            self.state = State::Sleeping {
-                                until: Duration::from_secs_f32(amount) + time.absolute_time(),
-                            }
-                        }
-                    }
+                    self.handle_level_event(event, &data);
                 }
+            }
+        }
+    }
+}
+
+impl<L: Level> LevelExecutorSystem<L> {
+    fn handle_formation_event(
+        &mut self,
+        event: FormationEvent,
+        (time, entities, lazy): &<Self as System>::SystemData,
+    ) {
+        match event {
+            FormationEvent::Single { enemy, pos, speed } => {
+                lazy.create_entity(&entities)
+                    .with(Transform::from(pos))
+                    .with(Circle {
+                        radius: 10.,
+                        color: [0.9, 0.1, 0.1],
+                    })
+                    .with(Moving::from(speed))
+                    .with(Enemy)
+                    .build();
+            }
+        }
+    }
+
+    fn handle_level_event(
+        &mut self,
+        event: Option<LevelEvent>,
+        data: &<Self as System>::SystemData,
+    ) {
+        let time = &data.0;
+        match event {
+            // Last event
+            None => {
+                self.state = State::Finished;
+            }
+            // Sleep for some amount of time
+            Some(LevelEvent::Wait(amount)) => {
+                self.state = State::Sleeping {
+                    until: Duration::from_secs_f32(amount) + time.absolute_time(),
+                }
+            }
+            // Create a formation then execute the next event
+            Some(LevelEvent::Formation(f)) => {
+                self.handle_formation_event(f, data);
+                self.state = State::ReadyForInstruction;
             }
         }
     }

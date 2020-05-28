@@ -1,3 +1,4 @@
+use amethyst::core::math::{Point2, Vector2};
 use derive_more::Display;
 use failure::{bail, Error, Fail, ResultExt};
 use rlua::{
@@ -7,12 +8,47 @@ use rlua::{
 use std::{fs, iter::Iterator, path::Path};
 
 #[derive(Debug, Clone)]
+pub enum EnemyType {
+    SimpleBall,
+}
+
+impl UserData for EnemyType {}
+
+#[derive(Debug, Clone)]
 pub enum LevelEvent {
     Wait(f32),
-    CreateEnemy,
+    Formation(FormationEvent),
+}
+
+#[derive(Debug, Clone)]
+pub enum FormationEvent {
+    Single {
+        enemy: EnemyType,
+        pos: Point2<f32>,
+        speed: Vector2<f32>,
+    },
+}
+
+#[derive(Debug, Copy, Clone)]
+struct Vec2(f32, f32);
+
+impl UserData for Vec2 {}
+
+impl From<Vec2> for Vector2<f32> {
+    fn from(v: Vec2) -> Self {
+        Self::new(v.0, v.1)
+    }
+}
+
+impl From<Vec2> for Point2<f32> {
+    fn from(v: Vec2) -> Self {
+        Self::new(v.0, v.1)
+    }
 }
 
 impl UserData for LevelEvent {}
+
+pub trait Level: Iterator<Item = LevelEvent> {}
 
 fn create_level_manager(ctx: Context) -> LuaResult<Table> {
     let t = ctx.create_table()?;
@@ -20,16 +56,33 @@ fn create_level_manager(ctx: Context) -> LuaResult<Table> {
         "wait",
         ctx.create_function(|_, val: f32| Ok(LevelEvent::Wait(val)))?,
     )?;
-    t.set(
-        "create_enemy",
-        ctx.create_function(|_, _: ()| Ok(LevelEvent::CreateEnemy))?,
-    )?;
-    ctx.load(include_str!("level_manager_wrapper.lua"))
+    ctx.load(include_str!("coroutine_wrapper.lua"))
         .eval::<Function>()?
         .call::<_, Table>(t)
 }
 
-pub trait Level: Iterator<Item = LevelEvent> {}
+fn create_formations(ctx: Context) -> LuaResult<Table> {
+    let f = ctx.create_table()?;
+    f.set(
+        "single",
+        ctx.create_function(|_, data: Table| {
+            Ok(LevelEvent::Formation(FormationEvent::Single {
+                enemy: data.get::<_, EnemyType>("enemy")?,
+                pos: data.get::<_, Vec2>("pos")?.into(),
+                speed: data.get::<_, Vec2>("speed")?.into(),
+            }))
+        })?,
+    )?;
+    ctx.load(include_str!("coroutine_wrapper.lua"))
+        .eval::<Function>()?
+        .call::<_, Table>(f)
+}
+
+fn create_enemies(ctx: Context) -> LuaResult<Table> {
+    let e = ctx.create_table()?;
+    e.set("SimpleBall", EnemyType::SimpleBall)?;
+    Ok(e)
+}
 
 pub struct LuaLevel {
     lua: Lua,
@@ -45,8 +98,15 @@ impl LuaLevel {
     pub fn new(path: &Path) -> Result<Self, Error> {
         let lua = Lua::new();
         let level_thread = lua.context::<_, Result<RegistryKey, Error>>(|ctx| {
-            let lm = create_level_manager(ctx)?;
-            ctx.globals().set("LevelManager", lm)?;
+            let globals = ctx.globals();
+            globals.set("LevelManager", create_level_manager(ctx)?)?;
+            globals.set("Formations", create_formations(ctx)?)?;
+            globals.set("Enemies", create_enemies(ctx)?)?;
+            globals.set(
+                "vec2",
+                ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?,
+            )?;
+
             let fun = ctx
                 .load(
                     &fs::read_to_string(path)
