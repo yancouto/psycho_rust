@@ -16,7 +16,6 @@ use crate::{
     systems::{
         gameplay::{CollisionSystem, LeaveScreenSystem},
         player::ShootSystem,
-        quickplay::EnemySpawnSystem,
     },
 };
 
@@ -61,7 +60,6 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
             "level_exec",
             &[],
         );
-        //builder.add(EnemySpawnSystem::default(), "quickplay_spawn", &[]);
         builder.add(ShootSystem::default(), "shoot", &[]);
         builder.add(CollisionSystem::default(), "collision", &[]);
         builder.add(LeaveScreenSystem::default(), "leave_screen", &[]);
