@@ -19,7 +19,9 @@ impl<'s> System<'s> for CollisionSystem {
     );
 
     fn run(&mut self, (entities, shots, enemies, transforms, circles): Self::SystemData) {
-        let shots = (&entities, &shots, &transforms, &circles).join().collect::<Vec<_>>();
+        let shots = (&entities, &shots, &transforms, &circles)
+            .join()
+            .collect::<Vec<_>>();
         (&entities, &enemies, &transforms, &circles)
             // Let's use multiple threads because why not
             // If this really becomes a problem, there are faster ways to
