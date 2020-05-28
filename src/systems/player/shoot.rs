@@ -7,7 +7,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{Circle, Moving, Player, Shot, Transform},
+    components::{Circle, Moving, Player, Shot, Transform, InScreen},
     input::{ActionBinding, PsychoBindingTypes},
 };
 
@@ -63,6 +63,8 @@ impl<'s> System<'s> for ShootSystem {
                     })
                     .with(Moving::from(dir * shot_speed))
                     .with(Shot)
+                    // It is fine to delete a shot as soon as it spawns
+                    .with(InScreen)
                     .build();
             }
         }

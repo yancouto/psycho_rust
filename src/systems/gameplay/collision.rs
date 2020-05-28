@@ -4,7 +4,7 @@ use amethyst::{
 };
 use rayon::prelude::*;
 
-use crate::components::{Circle, Enemy, Shot, Transform};
+use crate::components::{Circle, Enemy, Shot, Transform, InScreen};
 
 #[derive(SystemDesc, Default)]
 pub struct CollisionSystem;
@@ -16,19 +16,20 @@ impl<'s> System<'s> for CollisionSystem {
         ReadStorage<'s, Enemy>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Circle>,
+        ReadStorage<'s, InScreen>,
     );
 
-    fn run(&mut self, (entities, shots, enemies, transforms, circles): Self::SystemData) {
-        let shots = (&entities, &shots, &transforms, &circles)
+    fn run(&mut self, (entities, shots, enemies, transforms, circles, in_screens): Self::SystemData) {
+        let shots = (&entities, &shots, &transforms, &circles, &in_screens)
             .join()
             .collect::<Vec<_>>();
-        (&entities, &enemies, &transforms, &circles)
+        (&entities, &enemies, &transforms, &circles, &in_screens)
             // Let's use multiple threads because why not
             // If this really becomes a problem, there are faster ways to
             // implement this collision
             .par_join()
-            .for_each(|(e_id, _enemy, e_t, e_c)| {
-                for (s_id, _shot, s_t, s_c) in shots.clone().into_iter() {
+            .for_each(|(e_id, _enemy, e_t, e_c, _in_screen)| {
+                for (s_id, _shot, s_t, s_c, _in_screen) in shots.clone().into_iter() {
                     let radius = e_c.radius + s_c.radius;
                     if (e_t.0 - s_t.0).norm_squared() < radius * radius {
                         entities.delete(e_id).unwrap();
