@@ -1,7 +1,7 @@
 use amethyst::core::math::{Point2, Vector2};
 use derive_more::Display;
 use crate::{
-    editor::reader::{EnemyType, FormationEvent, LevelEvent, Level},
+    editor::reader::{BallEnemyType, FormationEvent, LevelEvent, Level},
     display::{WIDTH, HEIGHT},
 };
 use failure::{bail, Error, Fail, ResultExt};
@@ -27,7 +27,7 @@ impl From<Vec2> for Point2<f32> {
 }
 
 impl UserData for LevelEvent {}
-impl UserData for EnemyType {}
+impl UserData for BallEnemyType {}
 impl UserData for Vec2 {}
 
 fn create_level_manager(ctx: Context) -> LuaResult<Table> {
@@ -45,28 +45,29 @@ fn create_level_manager(ctx: Context) -> LuaResult<Table> {
         .call::<_, Table>(t)
 }
 
+fn create_ball_enemies(ctx: Context) -> LuaResult<Table> {
+    let e = ctx.create_table()?;
+    e.set("Simple", BallEnemyType::Simple)?;
+    Ok(e)
+}
+
 fn create_formations(ctx: Context) -> LuaResult<Table> {
     let f = ctx.create_table()?;
     f.set(
-        "single",
+        "single_ball",
         ctx.create_function(|_, data: Table| {
             Ok(LevelEvent::Formation(FormationEvent::Single {
-                enemy: data.get::<_, EnemyType>("enemy")?,
+                enemy: data.get::<_, BallEnemyType>("enemy")?,
                 pos: data.get::<_, Vec2>("pos")?.into(),
                 speed: data.get::<_, Vec2>("speed")?.into(),
                 radius: data.get::<_, Option<f32>>("radius")?,
             }))
         })?,
     )?;
+    f.set("BallEnemies", create_ball_enemies(ctx)?)?;
     ctx.load(include_str!("coroutine_wrapper.lua"))
         .eval::<Function>()?
         .call::<_, Table>(f)
-}
-
-fn create_enemies(ctx: Context) -> LuaResult<Table> {
-    let e = ctx.create_table()?;
-    e.set("SimpleBall", EnemyType::SimpleBall)?;
-    Ok(e)
 }
 
 pub struct LuaLevel {
@@ -86,7 +87,6 @@ impl LuaLevel {
             let globals = ctx.globals();
             globals.set("LevelManager", create_level_manager(ctx)?)?;
             globals.set("Formations", create_formations(ctx)?)?;
-            globals.set("Enemies", create_enemies(ctx)?)?;
             globals.set(
                 "vec2",
                 ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?,

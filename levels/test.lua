@@ -1,20 +1,49 @@
 local F = Formations
 local LM = LevelManager
-local SB = Enemies.SimpleBall
 
 for i = 1, 3 do
+    -- Wait for 1s before doing anything else
     LM.wait(1)
-    F.single {
-        enemy = SB,
+
+    -- Spawn a single ball enemy
+    F.single_ball {
+        -- Type of enemy to spawn - Simple means one ball that dies with one shot
+        enemy = F.BallEnemies.Simple,
+        -- Initial position of the ball
         pos = vec2(-20, HEIGHT/2),
+        -- Ball speed
         speed = vec2(10, 0),
+        -- Ball radius (default is 10)
         radius = 10 * i,
     }
 end
 
+-- Wait until all enemies leave screen or die
 LM.wait_until_no_enemies()
-F.single {
-    enemy = SB,
-    pos = vec2(WIDTH / 2, -20),
-    speed = vec2(0, 10),
+
+--[[
+-- Vertical line of ball enemies
+F.vertical_line {
+    -- Type of enemies
+    enemies = {F.BallEnemies.Simple},
+    -- Whether the line spawns left or right
+    side = F.VerticalLineSide.Left,
+    -- How many enemies are spawned (Must be >1)
+    amount = 9
+    -- How enemies are placed on the line
+    -- Distribute means enemies are evenly distributed from top to bottom
+    placement = F.VerticalLinePlacement.Distribute {
+        -- Margin is the distance of the top and bottom enemies to the edge of the screen (default 0)
+        margin = 10
+    },
 }
+]]
+
+--[[
+F.horizontal_line {
+    enemies = {F.BallEnemies.Simple},
+    side = F.HorizontalLineSide.Top,
+    amount = 11,
+    placement = F.HorizontalLinePlacement.Distribute {}
+}
+]]

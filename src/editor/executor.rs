@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use crate::{
     components::{Circle, Enemy, Moving, Transform},
-    editor::reader::{lua::LuaLevel, EnemyType, FormationEvent, Level, LevelEvent},
+    editor::reader::{lua::LuaLevel, BallEnemyType, FormationEvent, Level, LevelEvent},
 };
 
 /// Indicates the current state of this level execution in the state machine

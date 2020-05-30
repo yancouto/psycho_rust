@@ -4,14 +4,14 @@ use amethyst::core::math::{Point2, Vector2};
 use std::iter::Iterator;
 
 #[derive(Debug, Clone)]
-pub enum EnemyType {
-    SimpleBall,
+pub enum BallEnemyType {
+    Simple,
 }
 
 #[derive(Debug, Clone)]
 pub enum FormationEvent {
     Single {
-        enemy: EnemyType,
+        enemy: BallEnemyType,
         pos: Point2<f32>,
         speed: Vector2<f32>,
         radius: Option<f32>,
