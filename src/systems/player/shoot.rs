@@ -7,7 +7,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{Circle, Moving, Player, Shot, Transform, InScreen},
+    components::{Circle, InScreen, Moving, Player, Shot, Transform},
     input::{ActionBinding, PsychoBindingTypes},
 };
 

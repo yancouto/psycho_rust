@@ -4,7 +4,7 @@ use amethyst::{
 };
 use rayon::prelude::*;
 
-use crate::components::{Circle, Enemy, Shot, Transform, InScreen};
+use crate::components::{Circle, Enemy, InScreen, Shot, Transform};
 
 #[derive(SystemDesc, Default)]
 pub struct CollisionSystem;
@@ -19,7 +19,10 @@ impl<'s> System<'s> for CollisionSystem {
         ReadStorage<'s, InScreen>,
     );
 
-    fn run(&mut self, (entities, shots, enemies, transforms, circles, in_screens): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, shots, enemies, transforms, circles, in_screens): Self::SystemData,
+    ) {
         let shots = (&entities, &shots, &transforms, &circles, &in_screens)
             .join()
             .collect::<Vec<_>>();

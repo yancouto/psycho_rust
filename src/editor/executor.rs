@@ -1,7 +1,7 @@
 use amethyst::{
     core::timing::Time,
     derive::SystemDesc,
-    ecs::{Entities, LazyUpdate, Read, System, SystemData, ReadStorage},
+    ecs::{Entities, LazyUpdate, Read, ReadStorage, System, SystemData},
     prelude::*,
     utils::application_root_dir,
 };
@@ -12,7 +12,11 @@ use std::time::Duration;
 
 use crate::{
     components::{Circle, Enemy, Moving, Transform},
-    editor::reader::{lua::LuaLevel, BallEnemyType, FormationEvent, Level, LevelEvent},
+    display::{HEIGHT, WIDTH},
+    editor::reader::{
+        lua::LuaLevel, BallEnemyType, FormationEvent, Level, LevelEvent, VerticalLinePlacement,
+        VerticalLineSide,
+    },
 };
 
 /// Indicates the current state of this level execution in the state machine
@@ -51,7 +55,12 @@ impl LevelExecutorSystem<LuaLevel> {
 }
 
 impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
-    type SystemData = (Read<'s, Time>, Entities<'s>, Read<'s, LazyUpdate>, ReadStorage<'s, Enemy>);
+    type SystemData = (
+        Read<'s, Time>,
+        Entities<'s>,
+        Read<'s, LazyUpdate>,
+        ReadStorage<'s, Enemy>,
+    );
 
     fn run(&mut self, data: Self::SystemData) {
         let time = &data.0;
@@ -87,47 +96,84 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
     }
 }
 
-impl<L: Level> LevelExecutorSystem<L> {
-    fn handle_formation_event(
-        &mut self,
-        event: FormationEvent,
-        (time, entities, lazy, ..): &<Self as System>::SystemData,
-    ) {
-        match event {
-            FormationEvent::Single { enemy, pos, speed, radius } => {
+impl<'s> FormationEvent {
+    fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
+        match self {
+            FormationEvent::Single {
+                enemy,
+                pos,
+                speed,
+                radius,
+            } => {
                 lazy.create_entity(&entities)
                     .with(Transform::from(pos))
                     .with(Circle {
-                        radius: radius.unwrap_or(10.),
+                        radius,
                         color: [0.9, 0.1, 0.1],
                     })
                     .with(Moving::from(speed))
                     .with(Enemy)
                     .build();
             }
+            FormationEvent::VerticalLine {
+                enemies,
+                side,
+                speed,
+                radius,
+                amount,
+                placement,
+            } => {
+                let (speed, x) = if side == VerticalLineSide::Left {
+                    (speed, -radius)
+                } else {
+                    (-speed, WIDTH + radius)
+                };
+                match placement {
+                    VerticalLinePlacement::Distribute { margin } => {
+                        for i in 0..amount {
+                            lazy.create_entity(&entities)
+                                .with(Transform::new(
+                                    x,
+                                    // This needs improvements
+                                    // When amount = 2, they should be on the edges, even if the radius is small
+                                    // Radius has to go here somewhere.
+                                    (HEIGHT - 2. * margin) / (amount as f32) * ((i as f32) + 0.5) + margin,
+                                ))
+                                .with(Circle {
+                                    radius,
+                                    color: [0.9, 0.1, 0.1],
+                                })
+                                .with(Moving::new(speed, 0.))
+                                .with(Enemy)
+                                .build();
+                        }
+                    }
+                }
+            }
         }
     }
+}
 
+impl<L: Level> LevelExecutorSystem<L> {
     fn handle_level_event(
         &mut self,
         event: Option<LevelEvent>,
-        data: &<Self as System>::SystemData,
+        (time, entities, lazy, ..): &<Self as System>::SystemData,
     ) -> State {
-        let time = &data.0;
         match event {
             // Last event
-            None =>  State::Finished,
+            None => State::Finished,
             // Sleep for some amount of time
             Some(LevelEvent::Wait(amount)) => State::Sleeping {
-                    until: Duration::from_secs_f32(amount) + time.absolute_time(),
-                },
+                until: Duration::from_secs_f32(amount) + time.absolute_time(),
+            },
             // Sleep until no enemies are on screen
             Some(LevelEvent::WaitUntilNoEnemies) => State::WaitUntilNoEnemies,
             // Create a formation then execute the next event
             Some(LevelEvent::Formation(f)) => {
-                self.handle_formation_event(f, data);
+                f.create_formation(lazy, entities);
                 State::ReadyForInstruction
-            },
+            }
         }
     }
 }
