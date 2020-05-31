@@ -91,12 +91,34 @@ fn create_formations(ctx: Context) -> LuaResult<Table> {
     )?;
     f.set(
         "VerticalLinePlacement",
-        ctx.create_table_from(vec![(
-            "Distribute",
-            ctx.create_function(|_, data: Table| Ok(VerticalLinePlacement::Distribute {
-                margin: data.get::<_, Option<f32>>("margin")?.unwrap_or(0.),
-            }))?,
-        )])?,
+        ctx.create_table_from(vec![
+            (
+                "Distribute",
+                ctx.create_function(|_, data: Table| {
+                    Ok(VerticalLinePlacement::Distribute {
+                        margin: data.get::<_, Option<f32>>("margin")?.unwrap_or(0.),
+                    })
+                })?,
+            ),
+            (
+                "FromTop",
+                ctx.create_function(|_, data: Table| {
+                    Ok(VerticalLinePlacement::FromTop {
+                        margin: data.get::<_, Option<f32>>("margin")?.unwrap_or(0.),
+                        spacing: data.get::<_, f32>("spacing")?,
+                    })
+                })?,
+            ),
+            (
+                "FromBottom",
+                ctx.create_function(|_, data: Table| {
+                    Ok(VerticalLinePlacement::FromBottom {
+                        margin: data.get::<_, Option<f32>>("margin")?.unwrap_or(0.),
+                        spacing: data.get::<_, f32>("spacing")?,
+                    })
+                })?,
+            ),
+        ])?,
     )?;
     f.set(
         "vertical_line",

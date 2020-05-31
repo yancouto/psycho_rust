@@ -17,6 +17,8 @@ pub enum VerticalLineSide {
 #[derive(Debug, Clone, Copy)]
 pub enum VerticalLinePlacement {
     Distribute { margin: f32 },
+    FromBottom { margin: f32, spacing: f32 },
+    FromTop { margin: f32, spacing: f32 },
 }
 
 #[derive(Debug, Clone)]

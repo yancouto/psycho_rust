@@ -50,14 +50,15 @@ F.vertical_line {
     amount = 10,
     placement = F.VerticalLinePlacement.Distribute {},
 }
---[[
+
+LM.wait_until_no_enemies()
 F.vertical_line {
     enemies = {F.BallEnemies.Simple},
     side = F.VerticalLineSide.Right,
     amount = 4,
     -- Enemies start placed from top to bottom
     placement = F.VerticalLinePlacement.FromTop {
-        -- Margin between the first enemy and the top
+        -- Margin between the first enemy and the top (default 0)
         margin = 10,
         -- Spacing between two consecutive enemies
         spacing = 10,
@@ -66,7 +67,6 @@ F.vertical_line {
 F.vertical_line {
     enemies = {F.BallEnemies.Simple},
     side = F.VerticalLineSide.Right,
-    speed = 30,
     amount = 4,
     -- Analogous to FromTop
     placement = F.VerticalLinePlacement.FromBottom {
@@ -74,7 +74,6 @@ F.vertical_line {
         spacing = 10,
     },
 }
-]]
 
 --[[
 F.horizontal_line {

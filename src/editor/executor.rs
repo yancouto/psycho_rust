@@ -152,6 +152,18 @@ impl<'s> FormationEvent {
                         }
                         create_enemy(HEIGHT - margin - radius);
                     }
+                    VerticalLinePlacement::FromTop { margin, spacing } => {
+                        for i in 0..amount {
+                            create_enemy(margin + (i as f32) * (spacing + 2. * radius) + radius);
+                        }
+                    }
+                    VerticalLinePlacement::FromBottom { margin, spacing } => {
+                        for i in 0..amount {
+                            create_enemy(
+                                HEIGHT - (margin + (i as f32) * (spacing + 2. * radius) + radius),
+                            );
+                        }
+                    }
                 }
             }
         }
