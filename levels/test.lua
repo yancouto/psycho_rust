@@ -27,7 +27,7 @@ F.vertical_line {
     enemies = {F.BallEnemies.Simple},
     -- Whether the line spawns left or right
     side = F.VerticalLineSide.Left,
-    -- Horizontal speed of each ball (Default 15)
+    -- Horizontal speed of each ball (Default 15). Always positive!
     speed = 10,
     -- How many enemies are spawned (Must be 1<amount<100)
     amount = 15,

@@ -128,25 +128,29 @@ impl<'s> FormationEvent {
                 } else {
                     (-speed, WIDTH + radius)
                 };
+                let create_enemy = |y: f32| {
+                    lazy.create_entity(&entities)
+                        .with(Transform::new(x, y))
+                        .with(Moving::new(speed, 0.))
+                        .with(Circle {
+                            radius,
+                            color: [0.9, 0.1, 0.1],
+                        })
+                        .with(Enemy)
+                        .build();
+                };
                 match placement {
                     VerticalLinePlacement::Distribute { margin } => {
-                        for i in 0..amount {
-                            lazy.create_entity(&entities)
-                                .with(Transform::new(
-                                    x,
-                                    // This needs improvements
-                                    // When amount = 2, they should be on the edges, even if the radius is small
-                                    // Radius has to go here somewhere.
-                                    (HEIGHT - 2. * margin) / (amount as f32) * ((i as f32) + 0.5) + margin,
-                                ))
-                                .with(Circle {
-                                    radius,
-                                    color: [0.9, 0.1, 0.1],
-                                })
-                                .with(Moving::new(speed, 0.))
-                                .with(Enemy)
-                                .build();
+                        create_enemy(margin + radius);
+                        for i in 0..(amount - 2) {
+                            // Advanced maths to distance balls properly
+                            let w = HEIGHT - 2. * margin - 4. * radius;
+                            let (n, d, i) = ((amount - 2) as f32, 2. * radius, i as f32);
+                            create_enemy(
+                                (w - d * n) / (n + 1.) * (i + 1.) + (i + 1.5) * d + margin,
+                            );
                         }
+                        create_enemy(HEIGHT - margin - radius);
                     }
                 }
             }
