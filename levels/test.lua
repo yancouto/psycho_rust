@@ -1,13 +1,13 @@
-local F = Formations
-local LM = LevelManager
+local F = Formation
+local LE = LevelEvent
 
 for i = 1, 3 do
     -- Wait for 1s before doing anything else
-    LM.wait(1)
+    LE.Wait(1)
 
     -- Spawn a single ball enemy
-    LM.spawn(F.Single {
-        -- Type of enemy to spawn - Simple means one ball that dies with one shot
+    LE.Spawn(F.Single {
+        -- Type of enemy to Spawn - Simple means one ball that dies with one shot
         enemy = BallEnemy.Simple,
         -- Initial position of the ball
         pos = vec2(-20, HEIGHT/2),
@@ -19,17 +19,17 @@ for i = 1, 3 do
 end
 
 -- Wait until all enemies leave screen or die
-LM.wait_until_no_enemies()
+LE.WaitUntilNoEnemies()
 
 -- Vertical line of ball enemies
-LM.spawn(F.VerticalLine {
+LE.Spawn(F.VerticalLine {
     -- Type of enemies
     enemies = {BallEnemy.Simple},
-    -- Whether the line spawns left or right
+    -- Whether the line Spawns left or right
     side = VerticalLineSide.Left,
     -- Horizontal speed of each ball (Default 15). Always positive!
     speed = 10,
-    -- How many enemies are spawned (Must be 1<amount<100)
+    -- How many enemies are Spawned (Must be 1<amount<100)
     amount = 15,
     -- Radius of each ball (default 20)
     radius = 10,
@@ -42,17 +42,17 @@ LM.spawn(F.VerticalLine {
     },
 })
 
-LM.wait(2)
+LE.Wait(2)
 
-LM.spawn(F.VerticalLine {
+LE.Spawn(F.VerticalLine {
     enemies = {BallEnemy.Simple},
     side = VerticalLineSide.Right,
     amount = 10,
     placement = VerticalLinePlacement.Distribute {},
 })
 
-LM.wait_until_no_enemies()
-LM.spawn(F.VerticalLine {
+LE.WaitUntilNoEnemies()
+LE.Spawn(F.VerticalLine {
     enemies = {BallEnemy.Simple},
     side = VerticalLineSide.Right,
     amount = 4,
@@ -65,7 +65,7 @@ LM.spawn(F.VerticalLine {
     },
 })
 
-LM.spawn(F.VerticalLine {
+LE.Spawn(F.VerticalLine {
     enemies = {BallEnemy.Simple},
     side = VerticalLineSide.Right,
     amount = 4,
@@ -77,7 +77,7 @@ LM.spawn(F.VerticalLine {
 })
 
 --[[
-LM.spawn(F.horizontal_line {
+LE.Spawn(F.horizontal_line {
     enemies = {BallEnemy.Simple},
     side = F.HorizontalLineSide.Top,
     amount = 11,

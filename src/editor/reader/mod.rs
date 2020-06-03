@@ -9,7 +9,7 @@ use rlua_builders_derive::{UserData, LuaBuilder};
 use lua::Vec2;
 
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
-pub enum BallEnemyType {
+pub enum BallEnemy {
     Simple,
 }
 
@@ -27,15 +27,15 @@ pub enum VerticalLinePlacement {
 }
 
 #[derive(Debug, Clone, UserData, LuaBuilder)]
-pub enum FormationEvent {
+pub enum Formation {
     Single {
-        enemy: BallEnemyType,
+        enemy: BallEnemy,
         pos: Vec2,
         speed: Vec2,
         radius: Option<f32>,
     },
     VerticalLine {
-        enemies: Vec<BallEnemyType>,
+        enemies: Vec<BallEnemy>,
         speed: Option<f32>,
         radius: Option<f32>,
         side: VerticalLineSide,
@@ -44,11 +44,11 @@ pub enum FormationEvent {
     },
 }
 
-#[derive(Debug, Clone, UserData)]
+#[derive(Debug, Clone, UserData, LuaBuilder)]
 pub enum LevelEvent {
     Wait(f32),
-    WaitUntilNoEnemies,
-    Formation(FormationEvent),
+    WaitUntilNoEnemies(),
+    Spawn(Formation),
 }
 
 pub trait Level: Iterator<Item = LevelEvent> {}

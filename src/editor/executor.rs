@@ -14,7 +14,7 @@ use crate::{
     components::{Circle, Enemy, Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        lua::LuaLevel, BallEnemyType, FormationEvent, Level, LevelEvent, VerticalLinePlacement,
+        lua::LuaLevel, BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement,
         VerticalLineSide,
     },
 };
@@ -96,10 +96,10 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
     }
 }
 
-impl<'s> FormationEvent {
+impl<'s> Formation {
     fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
         match self {
-            FormationEvent::Single {
+            Formation::Single {
                 enemy,
                 pos,
                 speed,
@@ -115,7 +115,7 @@ impl<'s> FormationEvent {
                     .with(Enemy)
                     .build();
             }
-            FormationEvent::VerticalLine {
+            Formation::VerticalLine {
                 enemies,
                 side,
                 speed,
@@ -188,9 +188,9 @@ impl<L: Level> LevelExecutorSystem<L> {
                 until: Duration::from_secs_f32(amount) + time.absolute_time(),
             },
             // Sleep until no enemies are on screen
-            Some(LevelEvent::WaitUntilNoEnemies) => State::WaitUntilNoEnemies,
+            Some(LevelEvent::WaitUntilNoEnemies()) => State::WaitUntilNoEnemies,
             // Create a formation then execute the next event
-            Some(LevelEvent::Formation(f)) => {
+            Some(LevelEvent::Spawn(f)) => {
                 f.create_formation(lazy, entities);
                 State::ReadyForInstruction
             }

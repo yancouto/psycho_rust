@@ -1,7 +1,7 @@
 use crate::{
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        BallEnemyType, FormationEvent, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
+        BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
     },
 };
 use amethyst::core::math::{Point2, Vector2};
@@ -45,20 +45,8 @@ impl From<Vec2> for Moving {
 
 impl UserData for Vec2 {}
 
-fn create_level_manager(ctx: Context) -> LuaResult<Table> {
-    let t = ctx.create_table()?;
-    t.set(
-        "wait",
-        ctx.create_function(|_, val: f32| Ok(LevelEvent::Wait(val)))?,
-    )?;
-    t.set(
-        "wait_until_no_enemies",
-        ctx.create_function(|_, _: ()| Ok(LevelEvent::WaitUntilNoEnemies))?,
-    )?;
-    t.set(
-        "spawn",
-        ctx.create_function(|_, f: FormationEvent| Ok(LevelEvent::Formation(f)))?,
-    )?;
+fn create_level_event(ctx: Context) -> LuaResult<Table> {
+    let t = LevelEvent::builder(ctx)?;
     ctx.load(include_str!("coroutine_wrapper.lua"))
         .eval::<Function>()?
         .call::<_, Table>(t)
@@ -89,16 +77,19 @@ struct LuaError(LuaErrorInner);
 
 impl Fail for LuaError {}
 
+macro_rules! copy_builders {
+    ( $( $name: ident ),+ -> $ctx: ident ) => {
+        $( $ctx.globals().set(stringify!($name), $name::builder($ctx)?)?; )+
+    }
+}
+
 impl LuaLevel {
     pub fn new(path: &Path) -> Result<Self, Error> {
         let lua = Lua::new();
         let level_thread = lua.context::<_, Result<RegistryKey, Error>>(|ctx| {
             let globals = ctx.globals();
-            globals.set("LevelManager", create_level_manager(ctx)?)?;
-            globals.set("BallEnemy", BallEnemyType::builder(ctx)?)?;
-            globals.set("Formations", FormationEvent::builder(ctx)?)?;
-            globals.set("VerticalLinePlacement", VerticalLinePlacement::builder(ctx)?)?;
-            globals.set("VerticalLineSide", VerticalLineSide::builder(ctx)?)?;
+            globals.set("LevelEvent", create_level_event(ctx)?)?;
+            copy_builders!(BallEnemy, Formation, VerticalLinePlacement, VerticalLineSide -> ctx );
             globals.set(
                 "vec2",
                 ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?,
