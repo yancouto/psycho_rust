@@ -6,27 +6,27 @@ for i = 1, 3 do
     LM.wait(1)
 
     -- Spawn a single ball enemy
-    F.single_ball {
+    LM.spawn(F.Single {
         -- Type of enemy to spawn - Simple means one ball that dies with one shot
-        enemy = F.BallEnemies.Simple,
+        enemy = BallEnemy.Simple,
         -- Initial position of the ball
         pos = vec2(-20, HEIGHT/2),
         -- Ball speed
         speed = vec2(10, 0),
         -- Ball radius (default is 20)
         radius = 10 * i,
-    }
+    })
 end
 
 -- Wait until all enemies leave screen or die
 LM.wait_until_no_enemies()
 
 -- Vertical line of ball enemies
-F.vertical_line {
+LM.spawn(F.VerticalLine {
     -- Type of enemies
-    enemies = {F.BallEnemies.Simple},
+    enemies = {BallEnemy.Simple},
     -- Whether the line spawns left or right
-    side = F.VerticalLineSide.Left,
+    side = VerticalLineSide.Left,
     -- Horizontal speed of each ball (Default 15). Always positive!
     speed = 10,
     -- How many enemies are spawned (Must be 1<amount<100)
@@ -35,51 +35,52 @@ F.vertical_line {
     radius = 10,
     -- How enemies are placed on the line
     -- Distribute means enemies are evenly distributed from top to bottom
-    placement = F.VerticalLinePlacement.Distribute {
+    placement = VerticalLinePlacement.Distribute {
         -- Margin is the distance of the top and bottom enemies to the edge of the screen (default 0)
         -- If 0, top enemy will be touching the screen
         margin = 10
     },
-}
+})
 
 LM.wait(2)
 
-F.vertical_line {
-    enemies = {F.BallEnemies.Simple},
-    side = F.VerticalLineSide.Right,
+LM.spawn(F.VerticalLine {
+    enemies = {BallEnemy.Simple},
+    side = VerticalLineSide.Right,
     amount = 10,
-    placement = F.VerticalLinePlacement.Distribute {},
-}
+    placement = VerticalLinePlacement.Distribute {},
+})
 
 LM.wait_until_no_enemies()
-F.vertical_line {
-    enemies = {F.BallEnemies.Simple},
-    side = F.VerticalLineSide.Right,
+LM.spawn(F.VerticalLine {
+    enemies = {BallEnemy.Simple},
+    side = VerticalLineSide.Right,
     amount = 4,
     -- Enemies start placed from top to bottom
-    placement = F.VerticalLinePlacement.FromTop {
+    placement = VerticalLinePlacement.FromTop {
         -- Margin between the first enemy and the top (default 0)
         margin = 10,
         -- Spacing between two consecutive enemies
         spacing = 10,
     },
-}
-F.vertical_line {
-    enemies = {F.BallEnemies.Simple},
-    side = F.VerticalLineSide.Right,
+})
+
+LM.spawn(F.VerticalLine {
+    enemies = {BallEnemy.Simple},
+    side = VerticalLineSide.Right,
     amount = 4,
     -- Analogous to FromTop
-    placement = F.VerticalLinePlacement.FromBottom {
+    placement = VerticalLinePlacement.FromBottom {
         margin = 10,
         spacing = 10,
     },
-}
+})
 
 --[[
-F.horizontal_line {
-    enemies = {F.BallEnemies.Simple},
+LM.spawn(F.horizontal_line {
+    enemies = {BallEnemy.Simple},
     side = F.HorizontalLineSide.Top,
     amount = 11,
     placement = F.HorizontalLinePlacement.Distribute {},
-}
+})
 ]]

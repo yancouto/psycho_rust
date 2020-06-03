@@ -108,7 +108,7 @@ impl<'s> FormationEvent {
                 lazy.create_entity(&entities)
                     .with(Transform::from(pos))
                     .with(Circle {
-                        radius,
+                        radius: radius.unwrap_or(20.),
                         color: [0.9, 0.1, 0.1],
                     })
                     .with(Moving::from(speed))
@@ -123,6 +123,7 @@ impl<'s> FormationEvent {
                 amount,
                 placement,
             } => {
+                let (speed, radius) = (speed.unwrap_or(15.), radius.unwrap_or(20.));
                 let (speed, x) = if side == VerticalLineSide::Left {
                     (speed, -radius)
                 } else {
@@ -141,6 +142,7 @@ impl<'s> FormationEvent {
                 };
                 match placement {
                     VerticalLinePlacement::Distribute { margin } => {
+                        let margin = margin.unwrap_or(0.);
                         create_enemy(margin + radius);
                         for i in 0..(amount - 2) {
                             // Advanced maths to distance balls properly
@@ -153,11 +155,13 @@ impl<'s> FormationEvent {
                         create_enemy(HEIGHT - margin - radius);
                     }
                     VerticalLinePlacement::FromTop { margin, spacing } => {
+                        let margin = margin.unwrap_or(0.);
                         for i in 0..amount {
                             create_enemy(margin + (i as f32) * (spacing + 2. * radius) + radius);
                         }
                     }
                     VerticalLinePlacement::FromBottom { margin, spacing } => {
+                        let margin = margin.unwrap_or(0.);
                         for i in 0..amount {
                             create_enemy(
                                 HEIGHT - (margin + (i as f32) * (spacing + 2. * radius) + radius),

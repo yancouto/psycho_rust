@@ -2357,6 +2357,8 @@ dependencies = [
  "log",
  "rayon",
  "rlua",
+ "rlua-builders",
+ "rlua-builders-derive",
  "serde",
  "shaderc",
 ]
@@ -2973,6 +2975,26 @@ dependencies = [
  "cc",
  "libc",
  "num-traits 0.2.11",
+]
+
+[[package]]
+name = "rlua-builders"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a625e0ff31497a7cdd28d5eaf905f3895f2ef8c70c660e7cd8ccde836f7ee081"
+dependencies = [
+ "rlua",
+]
+
+[[package]]
+name = "rlua-builders-derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46d1e68738fc4898c55ae85751d9aa848d21a9e823796935763a611f1894de0c"
+dependencies = [
+ "proc-macro2 1.0.12",
+ "quote 1.0.4",
+ "syn 1.0.19",
 ]
 
 [[package]]
