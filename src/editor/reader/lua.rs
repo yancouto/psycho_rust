@@ -140,3 +140,10 @@ impl Iterator for LuaLevel {
 }
 
 impl Level for LuaLevel {}
+
+#[test]
+fn test_test_level_compiles() {
+    let level = LuaLevel::new(&Path::new("levels/test.lua")).unwrap();
+    // Test if iterator doesn't crash
+    assert_eq!(level.collect::<Vec<_>>().is_empty(), false);
+}
