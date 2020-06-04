@@ -1,19 +1,13 @@
 use crate::{
-    components::{Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
         BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
     },
 };
-use derive_more::Display;
-use failure::{bail, Error, Fail, ResultExt};
-use rlua::{
-    Context, Error as LuaErrorInner, Function, Lua, RegistryKey, Result as LuaResult, Table,
-    Thread, ThreadStatus, UserData,
-};
+use failure::{bail, Error, ResultExt};
+use rlua::{Context, Function, Lua, RegistryKey, Result as LuaResult, Table, Thread, ThreadStatus};
 use rlua_builders::LuaBuilder;
-use rlua_builders_derive::{LuaBuilder, UserData};
-use std::{fmt::Display, fs, iter::Iterator, path::Path};
+use std::{fs, iter::Iterator, path::Path};
 
 fn create_level_event(ctx: Context) -> LuaResult<Table> {
     let t = LevelEvent::builder(ctx)?;
@@ -22,29 +16,10 @@ fn create_level_event(ctx: Context) -> LuaResult<Table> {
         .call::<_, Table>(t)
 }
 
-trait TryClampForLua: Ord + Sized + Display {
-    fn try_clamp(self, name: &str, min: Self, max: Self) -> Result<Self, LuaErrorInner> {
-        if self < min || self > max {
-            Err(LuaErrorInner::RuntimeError(format!(
-                "{} must be between {} and {}",
-                name, min, max
-            )))
-        } else {
-            Ok(self)
-        }
-    }
-}
-impl<T: Ord + Sized + Display> TryClampForLua for T {}
-
 pub struct LuaLevel {
     lua: Lua,
     level_thread: RegistryKey,
 }
-
-#[derive(Debug, Display)]
-struct LuaError(LuaErrorInner);
-
-impl Fail for LuaError {}
 
 macro_rules! copy_builders {
     ( $( $name: ident ),+ -> $ctx: ident ) => {

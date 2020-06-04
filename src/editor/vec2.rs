@@ -1,6 +1,6 @@
 use crate::components::{Moving, Transform};
 use amethyst::core::math::{Point2, Vector2};
-use rlua::{AnyUserData, Context, Error, FromLua, Result, Value};
+use rlua::{Context, Error, FromLua, Result, Value};
 
 /// Our wrapper for Vector2<f32> and Point2<f32>, since we need but can't
 /// implement some traits on it
@@ -32,7 +32,7 @@ impl From<Vec2> for Moving {
 }
 
 impl<'s> FromLua<'s> for Vec2 {
-    fn from_lua(val: Value<'s>, ctx: Context<'s>) -> Result<Self> {
+    fn from_lua(val: Value<'s>, _: Context<'s>) -> Result<Self> {
         let err = || {
             Err(Error::FromLuaConversionError {
                 from: "value",

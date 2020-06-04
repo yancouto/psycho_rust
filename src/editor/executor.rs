@@ -14,8 +14,7 @@ use crate::{
     components::{Circle, Enemy, Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        lua::LuaLevel, BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement,
-        VerticalLineSide,
+        lua::LuaLevel, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
     },
 };
 
@@ -100,7 +99,7 @@ impl<'s> Formation {
     fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
         match self {
             Formation::Single {
-                enemy,
+                enemy: _,
                 pos,
                 speed,
                 radius,
@@ -116,7 +115,7 @@ impl<'s> Formation {
                     .build();
             }
             Formation::VerticalLine {
-                enemies,
+                enemies: _,
                 side,
                 speed,
                 radius,

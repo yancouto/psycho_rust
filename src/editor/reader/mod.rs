@@ -1,6 +1,5 @@
 pub mod lua;
 
-use amethyst::core::math::{Point2, Vector2};
 use std::iter::Iterator;
 
 use crate::editor::Vec2;
