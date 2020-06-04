@@ -1,49 +1,19 @@
 use crate::{
+    components::{Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
         BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
     },
 };
-use amethyst::core::math::{Point2, Vector2};
 use derive_more::Display;
 use failure::{bail, Error, Fail, ResultExt};
 use rlua::{
     Context, Error as LuaErrorInner, Function, Lua, RegistryKey, Result as LuaResult, Table,
     Thread, ThreadStatus, UserData,
 };
-use std::{fmt::Display, fs, iter::Iterator, path::Path};
 use rlua_builders::LuaBuilder;
-use rlua_builders_derive::{UserData, LuaBuilder};
-use crate::components::{Transform, Moving};
-
-#[derive(Debug, Copy, Clone)]
-pub struct Vec2(f32, f32);
-
-impl From<Vec2> for Vector2<f32> {
-    fn from(v: Vec2) -> Self {
-        Self::new(v.0, v.1)
-    }
-}
-
-impl From<Vec2> for Point2<f32> {
-    fn from(v: Vec2) -> Self {
-        Self::new(v.0, v.1)
-    }
-}
-
-impl From<Vec2> for Transform {
-    fn from(v: Vec2) -> Self {
-        Self(v.into())
-    }
-}
-
-impl From<Vec2> for Moving {
-    fn from(v: Vec2) -> Self {
-        Self(v.into())
-    }
-}
-
-impl UserData for Vec2 {}
+use rlua_builders_derive::{LuaBuilder, UserData};
+use std::{fmt::Display, fs, iter::Iterator, path::Path};
 
 fn create_level_event(ctx: Context) -> LuaResult<Table> {
     let t = LevelEvent::builder(ctx)?;
@@ -65,7 +35,6 @@ trait TryClampForLua: Ord + Sized + Display {
     }
 }
 impl<T: Ord + Sized + Display> TryClampForLua for T {}
-
 
 pub struct LuaLevel {
     lua: Lua,
@@ -90,10 +59,6 @@ impl LuaLevel {
             let globals = ctx.globals();
             globals.set("LevelEvent", create_level_event(ctx)?)?;
             copy_builders!(BallEnemy, Formation, VerticalLinePlacement, VerticalLineSide -> ctx );
-            globals.set(
-                "vec2",
-                ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?,
-            )?;
             globals.set("WIDTH", WIDTH)?;
             globals.set("HEIGHT", HEIGHT)?;
 

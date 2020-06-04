@@ -10,9 +10,9 @@ for i = 1, 3 do
         -- Type of enemy to Spawn - Simple means one ball that dies with one shot
         enemy = BallEnemy.Simple,
         -- Initial position of the ball
-        pos = vec2(-20, HEIGHT/2),
+        pos = {-20, HEIGHT/2},
         -- Ball speed
-        speed = vec2(10, 0),
+        speed = {10, 0},
         -- Ball radius (default is 20)
         radius = 10 * i,
     })

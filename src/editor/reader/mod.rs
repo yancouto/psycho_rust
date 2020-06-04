@@ -3,10 +3,10 @@ pub mod lua;
 use amethyst::core::math::{Point2, Vector2};
 use std::iter::Iterator;
 
+use crate::editor::Vec2;
 use rlua::UserData;
 use rlua_builders::LuaBuilder;
-use rlua_builders_derive::{UserData, LuaBuilder};
-use lua::Vec2;
+use rlua_builders_derive::{LuaBuilder, UserData};
 
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
 pub enum BallEnemy {
