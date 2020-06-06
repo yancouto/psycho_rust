@@ -49,23 +49,33 @@ pub enum Formation {
     },
     VerticalLine {
         enemies: Vec<BallEnemy>,
+        amount: u8,
         #[default = 15.]
         speed: f32,
         #[default = 20.]
         radius: f32,
         side: VerticalLineSide,
-        amount: u8,
         placement: VerticalLinePlacement,
     },
     HorizontalLine {
         enemies: Vec<BallEnemy>,
+        amount: u8,
         #[default = 15.]
         speed: f32,
         #[default = 20.]
         radius: f32,
         side: HorizontalLineSide,
-        amount: u8,
         placement: HorizontalLinePlacement,
+    },
+    Circle {
+        enemies: Vec<BallEnemy>,
+        amount: u8,
+        #[default = 15.]
+        speed: f32,
+        #[default = 20.]
+        enemy_radius: f32,
+        formation_radius: Option<f32>,
+        formation_center: Option<Vec2>,
     },
 }
 

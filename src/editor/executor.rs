@@ -1,4 +1,5 @@
 use amethyst::{
+    core::math::{Point2, RealField, Rotation2, Vector2},
     core::timing::Time,
     derive::SystemDesc,
     ecs::{Entities, LazyUpdate, Read, ReadStorage, System, SystemData},
@@ -90,6 +91,11 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
                     let event = self.level.next();
                     debug!("Got event: {:?}", event);
                     self.state = self.handle_level_event(event, &data);
+                    // Exit. It may be the case that an enemy was created lazily so we
+                    // need to wait for the next iteration to be sure.
+                    if matches!(self.state, State::WaitUntilNoEnemies) {
+                        return;
+                    }
                 }
             }
         }
@@ -231,6 +237,38 @@ impl<'s> Formation {
                         .with(Moving::new(0., speed))
                         .with(Circle {
                             radius,
+                            color: [0.9, 0.1, 0.1],
+                        })
+                        .with(Enemy)
+                        .build();
+                }
+            }
+            Formation::Circle {
+                enemies: _,
+                amount,
+                speed,
+                enemy_radius,
+                formation_radius,
+                formation_center,
+            } => {
+                if formation_center.is_some() && formation_radius.is_none() {
+                    // TODO(#2): Not panic maybe?
+                    panic!("Radius must be specified if center is");
+                }
+                let center: Point2<f32> = formation_center
+                    .map(Point2::<f32>::from)
+                    .unwrap_or(Point2::new(WIDTH / 2., HEIGHT / 2.));
+                let r = enemy_radius;
+                let R = formation_radius
+                    .unwrap_or_else(|| (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r);
+                for i in 0..amount {
+                    let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
+                        * Vector2::new(0., -1.);
+                    lazy.create_entity(&entities)
+                        .with(Transform::from(center + unit * R))
+                        .with(Moving::from(-unit * speed))
+                        .with(Circle {
+                            radius: enemy_radius,
                             color: [0.9, 0.1, 0.1],
                         })
                         .with(Enemy)
