@@ -4,8 +4,7 @@ use std::iter::Iterator;
 
 use crate::editor::Vec2;
 use rlua::UserData;
-use rlua_builders::LuaBuilder;
-use rlua_builders_derive::{LuaBuilder, UserData};
+use rlua_builders::{LuaBuilder, UserData};
 
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
 pub enum BallEnemy {

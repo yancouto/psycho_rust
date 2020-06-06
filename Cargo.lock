@@ -2358,7 +2358,6 @@ dependencies = [
  "rayon",
  "rlua",
  "rlua-builders",
- "rlua-builders-derive",
  "serde",
  "shaderc",
 ]
@@ -2979,11 +2978,12 @@ dependencies = [
 
 [[package]]
 name = "rlua-builders"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e50aace9c4358aaa76164e40cd81402a730c367659fdb482af4f1f553aa1eac8"
+checksum = "382ffd53e20733919513101d619ff0829cd7a0b9f3bf46d104eed20aca455891"
 dependencies = [
  "rlua",
+ "rlua-builders-derive",
 ]
 
 [[package]]
