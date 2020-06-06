@@ -29,7 +29,7 @@ LE.Spawn(F.VerticalLine {
     side = VerticalLineSide.Left,
     -- Horizontal speed of each ball (Default 15). Always positive!
     speed = 10,
-    -- How many enemies are Spawned (Must be 1<amount<100)
+    -- How many enemies are Spawned (Must be at most 255)
     amount = 15,
     -- Radius of each ball (default 20)
     radius = 10,

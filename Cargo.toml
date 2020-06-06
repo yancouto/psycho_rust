@@ -16,8 +16,8 @@ shaderc = "0.6"
 log = "0.4.8"
 rayon = "1"
 rlua = "0.17"
-rlua-builders = "0.1.1"
-rlua-builders-derive = "0.1.1"
+rlua-builders = "0.1.2"
+rlua-builders-derive = "0.1.2"
 
 [features]
 default = ["metal"]

@@ -180,7 +180,7 @@ impl<'s> Formation {
                 lazy.create_entity(&entities)
                     .with(Transform::from(pos))
                     .with(Circle {
-                        radius: radius.unwrap_or(20.),
+                        radius,
                         color: [0.9, 0.1, 0.1],
                     })
                     .with(Moving::from(speed))
@@ -195,7 +195,6 @@ impl<'s> Formation {
                 amount,
                 placement,
             } => {
-                let (speed, radius) = (speed.unwrap_or(15.), radius.unwrap_or(20.));
                 let (speed, x) = if side == VerticalLineSide::Left {
                     (speed, -radius)
                 } else {
@@ -221,7 +220,6 @@ impl<'s> Formation {
                 amount,
                 placement,
             } => {
-                let (speed, radius) = (speed.unwrap_or(15.), radius.unwrap_or(20.));
                 let (speed, y) = if side == HorizontalLineSide::Top {
                     (speed, -radius)
                 } else {
