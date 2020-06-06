@@ -1,7 +1,8 @@
 use crate::{
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        BallEnemy, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
+        BallEnemy, Formation, HorizontalLinePlacement, HorizontalLineSide, Level, LevelEvent,
+        VerticalLinePlacement, VerticalLineSide,
     },
 };
 use failure::{bail, Error, ResultExt};
@@ -33,7 +34,10 @@ impl LuaLevel {
         let level_thread = lua.context::<_, Result<RegistryKey, Error>>(|ctx| {
             let globals = ctx.globals();
             globals.set("LevelEvent", create_level_event(ctx)?)?;
-            copy_builders!(BallEnemy, Formation, VerticalLinePlacement, VerticalLineSide -> ctx );
+            copy_builders!(
+                BallEnemy, Formation, VerticalLinePlacement, VerticalLineSide,
+                HorizontalLinePlacement, HorizontalLineSide -> ctx
+            );
             globals.set("WIDTH", WIDTH)?;
             globals.set("HEIGHT", HEIGHT)?;
 

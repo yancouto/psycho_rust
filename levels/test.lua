@@ -76,11 +76,10 @@ LE.Spawn(F.VerticalLine {
     },
 })
 
---[[
-LE.Spawn(F.horizontal_line {
+-- Analogous to VerticalLine
+LE.Spawn(F.HorizontalLine {
     enemies = {BallEnemy.Simple},
-    side = F.HorizontalLineSide.Top,
+    side = HorizontalLineSide.Top,
     amount = 11,
-    placement = F.HorizontalLinePlacement.Distribute {},
+    placement = HorizontalLinePlacement.Distribute {},
 })
-]]

@@ -14,7 +14,8 @@ use crate::{
     components::{Circle, Enemy, Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        lua::LuaLevel, Formation, Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
+        lua::LuaLevel, Formation, HorizontalLinePlacement, HorizontalLineSide, Level, LevelEvent,
+        VerticalLinePlacement, VerticalLineSide,
     },
 };
 
@@ -95,6 +96,78 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
     }
 }
 
+/// Returns positions for the center of the circles when placing `amount` enemies on a
+/// line of size `width`, using `placement` to decide how to place them.
+fn line_enemy_positions(
+    radius: f32,
+    amount: u8,
+    width: f32,
+    placement: HorizontalLinePlacement,
+) -> Vec<f32> {
+    let mut ret = Vec::with_capacity(amount as usize);
+    if amount == 0 {
+        return ret;
+    }
+    match placement {
+        HorizontalLinePlacement::Distribute { margin } => {
+            if amount == 1 {
+                return vec![width / 2.];
+            }
+            let margin = margin.unwrap_or(0.);
+            ret.push(margin + radius);
+            for i in 0..(amount - 2) {
+                // Advanced maths to distance balls properly
+                let w = width - 2. * margin - 4. * radius;
+                let (n, d, i) = ((amount - 2) as f32, 2. * radius, i as f32);
+                ret.push((w - d * n) / (n + 1.) * (i + 1.) + (i + 1.5) * d + margin);
+            }
+            ret.push(width - margin - radius);
+        }
+        HorizontalLinePlacement::FromLeft { margin, spacing } => {
+            let margin = margin.unwrap_or(0.);
+            for i in 0..amount {
+                ret.push(margin + (i as f32) * (spacing + 2. * radius) + radius);
+            }
+        }
+        HorizontalLinePlacement::FromRight { margin, spacing } => {
+            let margin = margin.unwrap_or(0.);
+            for i in 0..amount {
+                ret.push(width - (margin + (i as f32) * (spacing + 2. * radius) + radius));
+            }
+        }
+    }
+    ret
+}
+
+#[test]
+fn test_enemy_positions() {
+    assert_eq!(
+        line_enemy_positions(
+            10.,
+            2,
+            100.,
+            HorizontalLinePlacement::Distribute { margin: Some(10.) }
+        ),
+        vec![20., 80.],
+    )
+}
+
+impl From<VerticalLinePlacement> for HorizontalLinePlacement {
+    fn from(p: VerticalLinePlacement) -> Self {
+        match p {
+            VerticalLinePlacement::Distribute { margin } => {
+                HorizontalLinePlacement::Distribute { margin }
+            }
+            VerticalLinePlacement::FromTop { margin, spacing } => {
+                HorizontalLinePlacement::FromLeft { margin, spacing }
+            }
+            VerticalLinePlacement::FromBottom { margin, spacing } => {
+                HorizontalLinePlacement::FromRight { margin, spacing }
+            }
+        }
+    }
+}
+
 impl<'s> Formation {
     fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
         match self {
@@ -128,7 +201,7 @@ impl<'s> Formation {
                 } else {
                     (-speed, WIDTH + radius)
                 };
-                let create_enemy = |y: f32| {
+                for y in line_enemy_positions(radius, amount, HEIGHT, placement.into()) {
                     lazy.create_entity(&entities)
                         .with(Transform::new(x, y))
                         .with(Moving::new(speed, 0.))
@@ -138,35 +211,32 @@ impl<'s> Formation {
                         })
                         .with(Enemy)
                         .build();
+                }
+            }
+            Formation::HorizontalLine {
+                enemies: _,
+                side,
+                speed,
+                radius,
+                amount,
+                placement,
+            } => {
+                let (speed, radius) = (speed.unwrap_or(15.), radius.unwrap_or(20.));
+                let (speed, y) = if side == HorizontalLineSide::Top {
+                    (speed, -radius)
+                } else {
+                    (-speed, HEIGHT + radius)
                 };
-                match placement {
-                    VerticalLinePlacement::Distribute { margin } => {
-                        let margin = margin.unwrap_or(0.);
-                        create_enemy(margin + radius);
-                        for i in 0..(amount - 2) {
-                            // Advanced maths to distance balls properly
-                            let w = HEIGHT - 2. * margin - 4. * radius;
-                            let (n, d, i) = ((amount - 2) as f32, 2. * radius, i as f32);
-                            create_enemy(
-                                (w - d * n) / (n + 1.) * (i + 1.) + (i + 1.5) * d + margin,
-                            );
-                        }
-                        create_enemy(HEIGHT - margin - radius);
-                    }
-                    VerticalLinePlacement::FromTop { margin, spacing } => {
-                        let margin = margin.unwrap_or(0.);
-                        for i in 0..amount {
-                            create_enemy(margin + (i as f32) * (spacing + 2. * radius) + radius);
-                        }
-                    }
-                    VerticalLinePlacement::FromBottom { margin, spacing } => {
-                        let margin = margin.unwrap_or(0.);
-                        for i in 0..amount {
-                            create_enemy(
-                                HEIGHT - (margin + (i as f32) * (spacing + 2. * radius) + radius),
-                            );
-                        }
-                    }
+                for x in line_enemy_positions(radius, amount, WIDTH, placement) {
+                    lazy.create_entity(&entities)
+                        .with(Transform::new(x, y))
+                        .with(Moving::new(0., speed))
+                        .with(Circle {
+                            radius,
+                            color: [0.9, 0.1, 0.1],
+                        })
+                        .with(Enemy)
+                        .build();
                 }
             }
         }

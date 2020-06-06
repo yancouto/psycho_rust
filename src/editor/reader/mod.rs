@@ -18,11 +18,24 @@ pub enum VerticalLineSide {
     Right,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, UserData, LuaBuilder)]
+pub enum HorizontalLineSide {
+    Top,
+    Bottom,
+}
+
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
 pub enum VerticalLinePlacement {
     Distribute { margin: Option<f32> },
     FromBottom { margin: Option<f32>, spacing: f32 },
     FromTop { margin: Option<f32>, spacing: f32 },
+}
+
+#[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
+pub enum HorizontalLinePlacement {
+    Distribute { margin: Option<f32> },
+    FromLeft { margin: Option<f32>, spacing: f32 },
+    FromRight { margin: Option<f32>, spacing: f32 },
 }
 
 #[derive(Debug, Clone, UserData, LuaBuilder)]
@@ -40,6 +53,14 @@ pub enum Formation {
         side: VerticalLineSide,
         amount: u8,
         placement: VerticalLinePlacement,
+    },
+    HorizontalLine {
+        enemies: Vec<BallEnemy>,
+        speed: Option<f32>,
+        radius: Option<f32>,
+        side: HorizontalLineSide,
+        amount: u8,
+        placement: HorizontalLinePlacement,
     },
 }
 
