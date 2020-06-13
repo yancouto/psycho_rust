@@ -2364,6 +2364,7 @@ dependencies = [
  "glsl-layout",
  "lazy_static",
  "log",
+ "rand 0.7.3",
  "rayon",
  "rlua",
  "rlua-builders",

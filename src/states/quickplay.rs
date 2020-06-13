@@ -15,6 +15,7 @@ use crate::{
     states::MainMenu,
     systems::{
         gameplay::{CollisionSystem, LeaveScreenSystem},
+        particles::FadeSystem,
         player::{CollisionSystem as PlayerCollisionSystem, MoveSystem, ShootSystem},
     },
 };
@@ -70,6 +71,7 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
                 "player_shoot",
                 &["player_collision"],
             )
+            .with(FadeSystem::default(), "particle_fade", &[])
             .build();
         let world = data.world;
         dispatch.setup(world);

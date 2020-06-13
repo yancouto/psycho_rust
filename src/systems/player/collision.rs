@@ -1,13 +1,14 @@
 use amethyst::{
-    core::math::Vector2,
+    core::{math::Vector2, timing::Time},
     derive::SystemDesc,
-    ecs::{Entities, Join, Read, ReadStorage, System, SystemData, WriteStorage},
+    ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, WriteStorage},
     input::InputHandler,
 };
 
 use crate::{
     components::{circle::collides, Circle, Enemy, InScreen, Player, Transform},
     input::{AxisBinding, PsychoBindingTypes},
+    systems::particles::create_explosion,
 };
 
 #[derive(SystemDesc, Default)]
@@ -15,6 +16,8 @@ pub struct CollisionSystem;
 
 impl<'s> System<'s> for CollisionSystem {
     type SystemData = (
+        Read<'s, Time>,
+        Read<'s, LazyUpdate>,
         Entities<'s>,
         ReadStorage<'s, Player>,
         ReadStorage<'s, Transform>,
@@ -25,7 +28,7 @@ impl<'s> System<'s> for CollisionSystem {
 
     fn run(
         &mut self,
-        (entities, players, transforms, circles, enemies, in_screens): Self::SystemData,
+        (time, lazy, entities, players, transforms, circles, enemies, in_screens): Self::SystemData,
     ) {
         let enemies = (&enemies, &in_screens, &circles, &transforms)
             .join()
@@ -36,6 +39,7 @@ impl<'s> System<'s> for CollisionSystem {
                 if collides(p_t, p_c, e_t, e_c, 2.) {
                     // Do something prettier eventually
                     entities.delete(p_id).unwrap();
+                    create_explosion(&time, &lazy, &entities, p_t.0, p_c.radius);
                     break;
                 }
             }
