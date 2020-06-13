@@ -39,7 +39,7 @@ pub fn create_explosion(
             .with(Color::rgb(1., 1., 1.))
             .with(Particle {
                 created: now,
-                lifetime: 0.5 + rnd() * 1.5,
+                lifetime: 0.5 + rnd() * 1.,
             })
             .build();
     }
