@@ -1,17 +1,20 @@
 use amethyst::{
     derive::SystemDesc,
-    ecs::{Entities, Join, ParJoin, ReadStorage, System, SystemData},
+    ecs::{Entities, Join, ParJoin, ReadStorage, System, SystemData, Read, LazyUpdate},
+    core::timing::Time
 };
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::components::{circle::collides, Circle, Enemy, InScreen, Shot, Transform};
+use crate::{components::{circle::collides, Circle, Enemy, InScreen, Shot, Transform}, systems::particles::create_explosion};
 
 #[derive(SystemDesc, Default)]
 pub struct CollisionSystem;
 
 impl<'s> System<'s> for CollisionSystem {
     type SystemData = (
+        Read<'s, Time>,
+        Read<'s, LazyUpdate>,
         Entities<'s>,
         ReadStorage<'s, Shot>,
         ReadStorage<'s, Enemy>,
@@ -22,7 +25,7 @@ impl<'s> System<'s> for CollisionSystem {
 
     fn run(
         &mut self,
-        (entities, shots, enemies, transforms, circles, in_screens): Self::SystemData,
+        (time, lazy, entities, shots, enemies, transforms, circles, in_screens): Self::SystemData,
     ) {
         let enemies = (&entities, &enemies, &transforms, &circles, &in_screens)
             .join()
@@ -37,14 +40,16 @@ impl<'s> System<'s> for CollisionSystem {
                 for (dead, (e_id, _enemy, e_t, e_c, _in_screen)) in enemies.iter() {
                     if collides(e_t, e_c, s_t, s_c, 0.) {
                         entities.delete(s_id).unwrap();
+                        create_explosion(&time, &lazy, &entities, s_t.0, s_c.radius, 10);
                         dead.store(true, Ordering::Relaxed);
                         break;
                     }
                 }
             });
-        for (dead, (e_id, ..)) in enemies {
+        for (dead, (e_id, _, e_t, e_c, _)) in enemies {
             if dead.into_inner() {
                 entities.delete(e_id).unwrap();
+                create_explosion(&time, &lazy, &entities, e_t.0, e_c.radius, 25);
             }
         }
     }

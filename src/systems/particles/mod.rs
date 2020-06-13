@@ -22,11 +22,11 @@ pub fn create_explosion(
     entities: &EntitiesRes,
     center: Point2<f32>,
     radius: f32,
+    n: u8,
 ) {
     let now = time.absolute_time().as_secs_f32();
     let mut rng = rand::thread_rng();
     let mut rnd = || rng.gen::<f32>();
-    let n = 40;
     for i in 0..n {
         let rnd_ang1 = rnd();
         let rnd_ang2 = rnd_ang1 + (rnd() * 0.5 - 0.25);

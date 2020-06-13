@@ -39,7 +39,7 @@ impl<'s> System<'s> for CollisionSystem {
                 if collides(p_t, p_c, e_t, e_c, 2.) {
                     // Do something prettier eventually
                     entities.delete(p_id).unwrap();
-                    create_explosion(&time, &lazy, &entities, p_t.0, p_c.radius);
+                    create_explosion(&time, &lazy, &entities, p_t.0, p_c.radius, 50);
                     break;
                 }
             }
