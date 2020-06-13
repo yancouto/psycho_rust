@@ -54,18 +54,17 @@ impl<'a, 'b> Quickplay<'a, 'b> {
 impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
     fn on_start(&mut self, data: StateData<GameData>) {
         info!("Started quickplay on level {}!", self.level_name);
-        let mut builder = DispatcherBuilder::new();
-        builder.add(
-            LevelExecutorSystem::from_lua(&self.level_name),
-            "level_exec",
-            &[],
-        );
-        builder.add(ShootSystem::default(), "shoot", &[]);
-        builder.add(CollisionSystem::default(), "collision", &[]);
-        builder.add(LeaveScreenSystem::default(), "leave_screen", &[]);
-        builder.add(MoveSystem, "player_move", &[]);
-        let mut dispatch = builder
+        let mut dispatch = DispatcherBuilder::new()
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
+            .with(
+                LevelExecutorSystem::from_lua(&self.level_name),
+                "level_exec",
+                &[],
+            )
+            .with(LeaveScreenSystem::default(), "leave_screen", &[])
+            .with(CollisionSystem::default(), "collision", &["leave_screen"])
+            .with(MoveSystem::default(), "player_move", &[])
+            .with(ShootSystem::default(), "player_shoot", &["player_move"])
             .build();
         let world = data.world;
         dispatch.setup(world);

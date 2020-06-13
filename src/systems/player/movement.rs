@@ -10,7 +10,7 @@ use crate::{
     input::{AxisBinding, PsychoBindingTypes},
 };
 
-#[derive(SystemDesc)]
+#[derive(SystemDesc, Default)]
 pub struct MoveSystem;
 
 impl<'s> System<'s> for MoveSystem {
