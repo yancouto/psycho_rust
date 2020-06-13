@@ -7,5 +7,5 @@ The abandoned re-remake of a game that was never released.
 To run the game, run the following command:
 
 ```bash
-cargo run
+cargo run -Zfeatures=itarget
 ```

@@ -41,7 +41,7 @@ impl<'a, 'b> Quickplay<'a, 'b> {
             world
                 .create_entity()
                 .with(Circle {
-                    radius: 100.,
+                    radius: 30.,
                     color: [0.3, 0.4, 1.],
                 })
                 .with(Transform::new(W / 2., H / 2.))

@@ -48,8 +48,11 @@ impl<'s> System<'s> for ShootSystem {
                 let r = circle.radius;
                 let center = transform.0;
                 let mouse = {
-                    let (mx, my) = input.mouse_position().unwrap();
-                    Point2::new(mx, my)
+                    if let Some((mx, my)) = input.mouse_position() {
+                        Point2::new(mx, my)
+                    } else {
+                        return;
+                    }
                 };
 
                 let dir = (mouse - center).normalize();
