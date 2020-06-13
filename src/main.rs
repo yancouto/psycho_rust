@@ -18,7 +18,7 @@ use amethyst::{
 use display::circle_drawer::RenderCircles;
 use input::PsychoBindingTypes;
 use states::MainMenu;
-use systems::{MovingSystem, PlayerMoveSystem};
+use systems::MovingSystem;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(LoggerConfig {
@@ -41,7 +41,6 @@ fn main() -> amethyst::Result<()> {
                 .with_bindings_from_file(app_root.join("config/bindings.ron"))
                 .expect("Failed to read bindings"),
         )?
-        .with(PlayerMoveSystem, "player_move", &["input_system"])
         .with(MovingSystem, "moving", &[]);
     let mut game = Application::new(app_root.join("assets"), MainMenu, game_data)?;
     game.run();

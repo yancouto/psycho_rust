@@ -15,7 +15,7 @@ use crate::{
     states::MainMenu,
     systems::{
         gameplay::{CollisionSystem, LeaveScreenSystem},
-        player::ShootSystem,
+        player::{MoveSystem, ShootSystem},
     },
 };
 
@@ -63,6 +63,7 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
         builder.add(ShootSystem::default(), "shoot", &[]);
         builder.add(CollisionSystem::default(), "collision", &[]);
         builder.add(LeaveScreenSystem::default(), "leave_screen", &[]);
+        builder.add(MoveSystem, "player_move", &[]);
         let mut dispatch = builder
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
             .build();

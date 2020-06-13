@@ -11,9 +11,9 @@ use crate::{
 };
 
 #[derive(SystemDesc)]
-pub struct PlayerMoveSystem;
+pub struct MoveSystem;
 
-impl<'s> System<'s> for PlayerMoveSystem {
+impl<'s> System<'s> for MoveSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Player>,
