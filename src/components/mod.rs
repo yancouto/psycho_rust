@@ -1,4 +1,4 @@
-mod circle;
+pub mod circle;
 mod player;
 pub mod transform;
 

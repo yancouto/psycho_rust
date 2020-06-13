@@ -5,7 +5,7 @@ use amethyst::{
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::components::{Circle, Enemy, InScreen, Shot, Transform};
+use crate::components::{circle::collides, Circle, Enemy, InScreen, Shot, Transform};
 
 #[derive(SystemDesc, Default)]
 pub struct CollisionSystem;
@@ -35,8 +35,7 @@ impl<'s> System<'s> for CollisionSystem {
             .par_join()
             .for_each(|(s_id, _shot, s_t, s_c, _in_screen)| {
                 for (dead, (e_id, _enemy, e_t, e_c, _in_screen)) in enemies.iter() {
-                    let radius = e_c.radius + s_c.radius;
-                    if (e_t.0 - s_t.0).norm_squared() < radius * radius {
+                    if collides(e_t, e_c, s_t, s_c, 0.) {
                         entities.delete(s_id).unwrap();
                         dead.store(true, Ordering::Relaxed);
                         break;

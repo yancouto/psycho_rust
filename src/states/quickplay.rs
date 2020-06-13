@@ -2,7 +2,7 @@
 
 use amethyst::{
     core::ArcThreadPool,
-    ecs::{world::EntitiesRes, Dispatcher, DispatcherBuilder, Entity},
+    ecs::{Dispatcher, DispatcherBuilder, Entities, Entity, Join, ReadStorage},
     prelude::*,
     winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
 };
@@ -15,14 +15,13 @@ use crate::{
     states::MainMenu,
     systems::{
         gameplay::{CollisionSystem, LeaveScreenSystem},
-        player::{MoveSystem, ShootSystem},
+        player::{CollisionSystem as PlayerCollisionSystem, MoveSystem, ShootSystem},
     },
 };
 
 pub struct Quickplay<'a, 'b> {
     level_name: String,
     dispatcher: Option<Dispatcher<'a, 'b>>,
-    player: Option<Entity>,
 }
 
 impl<'a, 'b> Quickplay<'a, 'b> {
@@ -30,24 +29,21 @@ impl<'a, 'b> Quickplay<'a, 'b> {
         Self {
             level_name,
             dispatcher: None,
-            player: None,
         }
     }
 }
 
 impl<'a, 'b> Quickplay<'a, 'b> {
     fn initialize_balls(&mut self, world: &mut World) {
-        self.player = Some(
-            world
-                .create_entity()
-                .with(Circle {
-                    radius: 30.,
-                    color: [0.3, 0.4, 1.],
-                })
-                .with(Transform::new(W / 2., H / 2.))
-                .with(Player)
-                .build(),
-        );
+        world
+            .create_entity()
+            .with(Circle {
+                radius: 30.,
+                color: [0.3, 0.4, 1.],
+            })
+            .with(Transform::new(W / 2., H / 2.))
+            .with(Player)
+            .build();
     }
 }
 
@@ -64,7 +60,16 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
             .with(LeaveScreenSystem::default(), "leave_screen", &[])
             .with(CollisionSystem::default(), "collision", &["leave_screen"])
             .with(MoveSystem::default(), "player_move", &[])
-            .with(ShootSystem::default(), "player_shoot", &["player_move"])
+            .with(
+                PlayerCollisionSystem::default(),
+                "player_collision",
+                &["player_move"],
+            )
+            .with(
+                ShootSystem::default(),
+                "player_shoot",
+                &["player_collision"],
+            )
             .build();
         let world = data.world;
         dispatch.setup(world);
@@ -73,9 +78,10 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
     }
 
     fn on_stop(&mut self, data: StateData<GameData>) {
-        if let Some(player) = self.player {
-            let es = data.world.fetch::<EntitiesRes>();
-            es.delete(player).unwrap();
+        // Delete all circles
+        let (entities, circles): (Entities, ReadStorage<'_, Circle>) = data.world.system_data();
+        for (c_id, circle) in (&entities, &circles).join() {
+            entities.delete(c_id).unwrap();
         }
     }
 
