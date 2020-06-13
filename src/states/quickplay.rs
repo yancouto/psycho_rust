@@ -9,7 +9,7 @@ use amethyst::{
 use log::info;
 
 use crate::{
-    components::{Circle, Player, Transform},
+    components::{Circle, Color, Player, Transform},
     display::{HEIGHT as H, WIDTH as W},
     editor::executor::LevelExecutorSystem,
     states::MainMenu,
@@ -38,10 +38,8 @@ impl<'a, 'b> Quickplay<'a, 'b> {
     fn initialize_balls(&mut self, world: &mut World) {
         world
             .create_entity()
-            .with(Circle {
-                radius: 30.,
-                color: [0.3, 0.4, 1.],
-            })
+            .with(Circle::with_radius(30.))
+            .with(Color::rgb(0.3, 0.4, 1.))
             .with(Transform::new(W / 2., H / 2.))
             .with(Player)
             .build();

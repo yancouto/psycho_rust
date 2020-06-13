@@ -6,7 +6,12 @@ use crate::components::Transform;
 #[derive(Debug, Default, Component)]
 pub struct Circle {
     pub radius: f32,
-    pub color: [f32; 3],
+}
+
+impl Circle {
+    pub fn with_radius(radius: f32) -> Self {
+        Self { radius }
+    }
 }
 
 pub fn collides(t1: &Transform, c1: &Circle, t2: &Transform, c2: &Circle, threshold: f32) -> bool {

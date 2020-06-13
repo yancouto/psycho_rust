@@ -14,7 +14,7 @@ use amethyst::{
 
 use rand::Rng;
 
-use crate::components::{Circle, Moving, Particle, Transform};
+use crate::components::{Circle, Color, Moving, Particle, Transform};
 
 pub fn create_explosion(
     time: &Time,
@@ -35,10 +35,8 @@ pub fn create_explosion(
         lazy.create_entity(entities)
             .with(Transform::from(center + unit1 * radius * 0.75))
             .with(Moving::from(unit2 * (1.5 + rnd() * 1.5)))
-            .with(Circle {
-                radius: 2.,
-                color: [1., 1., 1.],
-            })
+            .with(Circle::with_radius(2.))
+            .with(Color::rgb(1., 1., 1.))
             .with(Particle {
                 created: now,
                 lifetime: 0.5 + rnd() * 1.5,

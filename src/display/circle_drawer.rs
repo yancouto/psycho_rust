@@ -41,7 +41,7 @@ use glsl_layout::*;
 use lazy_static::lazy_static;
 
 use crate::{
-    components::{Circle, Transform},
+    components::{Circle, Color, Transform},
     display::{HEIGHT, WIDTH},
 };
 
@@ -164,14 +164,19 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCircleDesc {
 #[derive(Debug)]
 pub struct RenderCircles;
 
+macro_rules! register {
+    ($($comp:ident),+ -> $world:ident) => {
+        $($world.register::<$comp>();)*
+    }
+}
+
 impl<B: Backend> RenderPlugin<B> for RenderCircles {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
         _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> amethyst::Result<()> {
-        world.register::<Circle>();
-        world.register::<Transform>();
+        register!(Color, Circle, Transform -> world);
         Ok(())
     }
 
@@ -208,13 +213,16 @@ impl<B: Backend> RenderGroup<B, World> for DrawCircle<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         world: &World,
     ) -> PrepareResult {
-        let (circles, transforms) =
-            <(ReadStorage<'_, Circle>, ReadStorage<'_, Transform>)>::fetch(world);
+        let (circles, transforms, colors) = <(
+            ReadStorage<'_, Circle>,
+            ReadStorage<'_, Transform>,
+            ReadStorage<'_, Color>,
+        )>::fetch(world);
 
         // Create all vertices
-        let vertex_data = (&circles, &transforms)
+        let vertex_data = (&circles, &transforms, &colors)
             .join()
-            .flat_map(|(c, t)| c.get_vertices(t))
+            .flat_map(|(circle, t, color)| circle.get_vertices(t, color))
             .collect::<Box<[CircleArgs]>>();
 
         //Update vertex count and see if it has changed
@@ -294,9 +302,9 @@ impl AsVertex for CircleArgs {
 
 impl Circle {
     /// Helper function to convert triangle into 3 vertices
-    pub fn get_vertices(&self, t: &Transform) -> Vec<CircleArgs> {
+    pub fn get_vertices(&self, t: &Transform, color: &Color) -> Vec<CircleArgs> {
         let (c, r) = (t.0, self.radius);
-        let color = [self.color[0], self.color[1], self.color[2], 1.].into();
+        let color = color.inner().into();
         let square = vec![
             Vector2::new(-1., -1.),
             Vector2::new(-1., 1.),

@@ -7,7 +7,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{Circle, InScreen, Moving, Player, Shot, Transform},
+    components::{Circle, Color, InScreen, Moving, Player, Shot, Transform},
     input::{ActionBinding, PsychoBindingTypes},
 };
 
@@ -60,10 +60,8 @@ impl<'s> System<'s> for ShootSystem {
 
                 lazy.create_entity(&entities)
                     .with(Transform::from(shot_center))
-                    .with(Circle {
-                        radius: shot_radius,
-                        color: [0.1, 0.1, 0.9],
-                    })
+                    .with(Circle::with_radius(shot_radius))
+                    .with(Color::rgb(0.1, 0.1, 0.9))
                     .with(Moving::from(dir * shot_speed))
                     .with(Shot)
                     // It is fine to delete a shot as soon as it spawns

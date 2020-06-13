@@ -12,7 +12,7 @@ use log::debug;
 use std::time::Duration;
 
 use crate::{
-    components::{Circle, Enemy, Moving, Transform},
+    components::{Circle, Color, Enemy, Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
         lua::LuaLevel, Formation, HorizontalLinePlacement, HorizontalLineSide, Level, LevelEvent,
@@ -185,10 +185,8 @@ impl<'s> Formation {
             } => {
                 lazy.create_entity(&entities)
                     .with(Transform::from(pos))
-                    .with(Circle {
-                        radius,
-                        color: [0.9, 0.1, 0.1],
-                    })
+                    .with(Circle::with_radius(radius))
+                    .with(Color::rgb(0.9, 0.1, 0.1))
                     .with(Moving::from(speed))
                     .with(Enemy)
                     .build();
@@ -210,10 +208,8 @@ impl<'s> Formation {
                     lazy.create_entity(&entities)
                         .with(Transform::new(x, y))
                         .with(Moving::new(speed, 0.))
-                        .with(Circle {
-                            radius,
-                            color: [0.9, 0.1, 0.1],
-                        })
+                        .with(Circle::with_radius(radius))
+                        .with(Color::rgb(0.9, 0.1, 0.1))
                         .with(Enemy)
                         .build();
                 }
@@ -235,10 +231,8 @@ impl<'s> Formation {
                     lazy.create_entity(&entities)
                         .with(Transform::new(x, y))
                         .with(Moving::new(0., speed))
-                        .with(Circle {
-                            radius,
-                            color: [0.9, 0.1, 0.1],
-                        })
+                        .with(Circle::with_radius(radius))
+                        .with(Color::rgb(0.9, 0.1, 0.1))
                         .with(Enemy)
                         .build();
                 }
@@ -267,10 +261,8 @@ impl<'s> Formation {
                     lazy.create_entity(&entities)
                         .with(Transform::from(center + unit * R))
                         .with(Moving::from(-unit * speed))
-                        .with(Circle {
-                            radius: enemy_radius,
-                            color: [0.9, 0.1, 0.1],
-                        })
+                        .with(Circle::with_radius(enemy_radius))
+                        .with(Color::rgb(0.9, 0.1, 0.1))
                         .with(Enemy)
                         .build();
                 }
