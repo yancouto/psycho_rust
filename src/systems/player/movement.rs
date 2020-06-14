@@ -13,6 +13,8 @@ use crate::{
 #[derive(SystemDesc, Default)]
 pub struct MoveSystem;
 
+const PSYCHO_SPEED: f32 = 10.;
+
 impl<'s> System<'s> for MoveSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
@@ -27,7 +29,7 @@ impl<'s> System<'s> for MoveSystem {
                 -input.axis_value(&AxisBinding::Vertical).unwrap(),
             );
             if dir.x != 0. || dir.y != 0. {
-                transform.0 += 10. * dir.normalize();
+                transform.0 += PSYCHO_SPEED * dir.normalize();
             }
         }
     }
