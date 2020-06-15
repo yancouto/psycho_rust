@@ -11,4 +11,4 @@ macro_rules! tag_components {
     };
 }
 
-tag_components!(Player, Enemy, Shot, InScreen);
+tag_components!(Player, Shot, InScreen);

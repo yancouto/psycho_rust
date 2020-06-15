@@ -4,7 +4,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{Circle, Enemy, InScreen, Shot, Transform},
+    components::{BallEnemy, Circle, InScreen, Shot, Transform},
     display::{HEIGHT as H, WIDTH as W},
 };
 
@@ -15,7 +15,7 @@ impl<'s> System<'s> for LeaveScreenSystem {
     type SystemData = (
         Entities<'s>,
         ReadStorage<'s, Shot>,
-        ReadStorage<'s, Enemy>,
+        ReadStorage<'s, BallEnemy>,
         ReadStorage<'s, InScreen>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Circle>,

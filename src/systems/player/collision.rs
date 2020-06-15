@@ -6,7 +6,7 @@ use amethyst::{
 };
 
 use crate::{
-    components::{circle::collides, Circle, Enemy, InScreen, Player, Transform},
+    components::{circle::collides, BallEnemy, Circle, InScreen, Player, Transform},
     input::{AxisBinding, PsychoBindingTypes},
     systems::particles::create_explosion,
 };
@@ -22,7 +22,7 @@ impl<'s> System<'s> for CollisionSystem {
         ReadStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Circle>,
-        ReadStorage<'s, Enemy>,
+        ReadStorage<'s, BallEnemy>,
         ReadStorage<'s, InScreen>,
     );
 

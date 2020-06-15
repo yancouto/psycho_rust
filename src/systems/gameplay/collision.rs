@@ -1,12 +1,15 @@
 use amethyst::{
+    core::timing::Time,
     derive::SystemDesc,
-    ecs::{Entities, Join, ParJoin, ReadStorage, System, SystemData, Read, LazyUpdate},
-    core::timing::Time
+    ecs::{Entities, Join, LazyUpdate, ParJoin, Read, ReadStorage, System, SystemData},
 };
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::{components::{circle::collides, Circle, Enemy, InScreen, Shot, Transform}, systems::particles::create_explosion};
+use crate::{
+    components::{circle::collides, BallEnemy, Circle, InScreen, Shot, Transform},
+    systems::particles::create_explosion,
+};
 
 #[derive(SystemDesc, Default)]
 pub struct CollisionSystem;
@@ -17,7 +20,7 @@ impl<'s> System<'s> for CollisionSystem {
         Read<'s, LazyUpdate>,
         Entities<'s>,
         ReadStorage<'s, Shot>,
-        ReadStorage<'s, Enemy>,
+        ReadStorage<'s, BallEnemy>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Circle>,
         ReadStorage<'s, InScreen>,

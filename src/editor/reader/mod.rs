@@ -97,7 +97,7 @@ pub enum Formation {
         enemy_radius: f32,
         #[default = 10.]
         speed: f32,
-    }
+    },
 }
 
 #[derive(Debug, Clone, UserData, LuaBuilder)]

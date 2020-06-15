@@ -12,11 +12,11 @@ use log::debug;
 use std::time::Duration;
 
 use crate::{
-    components::{Circle, Color, Enemy, Moving, Transform},
+    components::{Circle, Color, Moving, Transform},
     display::{HEIGHT, WIDTH},
     editor::reader::{
-        lua::LuaLevel, Formation, HorizontalLinePlacement, HorizontalLineSide, Level, LevelEvent,
-        VerticalLinePlacement, VerticalLineSide,
+        lua::LuaLevel, BallEnemy, Formation, HorizontalLinePlacement, HorizontalLineSide, Level,
+        LevelEvent, VerticalLinePlacement, VerticalLineSide,
     },
 };
 
@@ -60,7 +60,7 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
         Read<'s, Time>,
         Entities<'s>,
         Read<'s, LazyUpdate>,
-        ReadStorage<'s, Enemy>,
+        ReadStorage<'s, BallEnemy>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -219,7 +219,7 @@ impl<'s> Formation {
     fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
         match self {
             Formation::Single {
-                enemy: _,
+                enemy,
                 pos,
                 speed,
                 radius,
@@ -229,17 +229,18 @@ impl<'s> Formation {
                     .with(Circle::with_radius(radius))
                     .with(Color::rgb(0.9, 0.1, 0.1))
                     .with(Moving::from(speed))
-                    .with(Enemy)
+                    .with(enemy)
                     .build();
             }
             Formation::Multiple {
-                enemies: _,
+                enemies,
                 amount,
                 spacing,
                 pos,
                 speed,
                 radius,
             } => {
+                let mut enemies = enemies.into_iter().cycle();
                 let dir = Vector2::from(speed).normalize();
                 let pos = Into::<Point2<f32>>::into(pos);
                 for i in 0..amount {
@@ -250,18 +251,19 @@ impl<'s> Formation {
                         .with(Circle::with_radius(radius))
                         .with(Color::rgb(0.9, 0.1, 0.1))
                         .with(Moving::from(speed))
-                        .with(Enemy)
+                        .with(enemies.next().unwrap())
                         .build();
                 }
             }
             Formation::VerticalLine {
-                enemies: _,
+                enemies,
                 side,
                 speed,
                 radius,
                 amount,
                 placement,
             } => {
+                let mut enemies = enemies.into_iter().cycle();
                 let (speed, x) = if side == VerticalLineSide::Left {
                     (speed, -radius)
                 } else {
@@ -273,18 +275,19 @@ impl<'s> Formation {
                         .with(Moving::new(speed, 0.))
                         .with(Circle::with_radius(radius))
                         .with(Color::rgb(0.9, 0.1, 0.1))
-                        .with(Enemy)
+                        .with(enemies.next().unwrap())
                         .build();
                 }
             }
             Formation::HorizontalLine {
-                enemies: _,
+                enemies,
                 side,
                 speed,
                 radius,
                 amount,
                 placement,
             } => {
+                let mut enemies = enemies.into_iter().cycle();
                 let (speed, y) = if side == HorizontalLineSide::Top {
                     (speed, -radius)
                 } else {
@@ -296,18 +299,19 @@ impl<'s> Formation {
                         .with(Moving::new(0., speed))
                         .with(Circle::with_radius(radius))
                         .with(Color::rgb(0.9, 0.1, 0.1))
-                        .with(Enemy)
+                        .with(enemies.next().unwrap())
                         .build();
                 }
             }
             Formation::Circle {
-                enemies: _,
+                enemies,
                 amount,
                 speed,
                 enemy_radius,
                 formation_radius,
                 formation_center,
             } => {
+                let mut enemies = enemies.into_iter().cycle();
                 if formation_center.is_some() && formation_radius.is_none() {
                     // TODO(#2): Not panic maybe?
                     panic!("Radius must be specified if center is");
@@ -326,18 +330,19 @@ impl<'s> Formation {
                         .with(Moving::from(-unit * speed))
                         .with(Circle::with_radius(enemy_radius))
                         .with(Color::rgb(0.9, 0.1, 0.1))
-                        .with(Enemy)
+                        .with(enemies.next().unwrap())
                         .build();
                 }
             }
             Formation::Spiral {
-                enemies: _,
+                enemies,
                 amount_in_circle,
                 amount,
                 spacing,
                 speed,
                 enemy_radius,
             } => {
+                let mut enemies = enemies.into_iter().cycle();
                 let center = Point2::new(WIDTH / 2., HEIGHT / 2.);
                 let r = enemy_radius;
                 let R = (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r;
@@ -350,7 +355,7 @@ impl<'s> Formation {
                         .with(Moving::from(-unit * speed))
                         .with(Circle::with_radius(enemy_radius))
                         .with(Color::rgb(0.9, 0.1, 0.1))
-                        .with(Enemy)
+                        .with(enemies.next().unwrap())
                         .build();
                 }
             }
