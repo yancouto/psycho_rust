@@ -232,6 +232,28 @@ impl<'s> Formation {
                     .with(Enemy)
                     .build();
             }
+            Formation::Multiple {
+                enemies: _,
+                amount,
+                spacing,
+                pos,
+                speed,
+                radius,
+            } => {
+                let dir = Vector2::from(speed).normalize();
+                let pos = Into::<Point2<f32>>::into(pos);
+                for i in 0..amount {
+                    lazy.create_entity(&entities)
+                        .with(Transform::from(
+                            pos - dir * (i as f32) * (spacing + 2. * radius),
+                        ))
+                        .with(Circle::with_radius(radius))
+                        .with(Color::rgb(0.9, 0.1, 0.1))
+                        .with(Moving::from(speed))
+                        .with(Enemy)
+                        .build();
+                }
+            }
             Formation::VerticalLine {
                 enemies: _,
                 side,

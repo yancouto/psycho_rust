@@ -48,6 +48,16 @@ pub enum Formation {
         #[default = 20.]
         radius: f32,
     },
+    Multiple {
+        enemies: Vec<BallEnemy>,
+        amount: u8,
+        #[default = 5.]
+        spacing: f32,
+        pos: Vec2,
+        speed: Vec2,
+        #[default = 20.]
+        radius: f32,
+    },
     VerticalLine {
         enemies: Vec<BallEnemy>,
         amount: u8,

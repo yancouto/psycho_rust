@@ -22,6 +22,23 @@ end
 LE.WaitUntilNoEnemies()
 
 for i = 1, 3 do
+    -- Spawn multiple balls in a line
+    LE.Spawn(F.Multiple {
+        enemies = {BallEnemy.Simple},
+        -- Amount of balls spawned
+        amount = 30,
+        -- Spacing between adjacent balls (default is 5)
+        spacing = 10,
+        -- Initial position of the ball
+        pos = {WIDTH + 20, HEIGHT / 4 * i},
+        -- Balls speed (and direction)
+        speed = {-10, 0},
+        -- Radius of all balls (default is 20)
+        radius = nil,
+    })
+end
+
+for i = 1, 3 do
     LE.Spawn(F.VerticalLine {
         -- Type of enemies
         enemies = {BallEnemy.Simple},
@@ -32,7 +49,7 @@ for i = 1, 3 do
         -- How many enemies are Spawned (Must be at most 255, and ODD!)
         amount = 15,
         -- Radius of each ball (default 20)
-        radius = 10,
+        radius = 25,
         -- V means balls are spawned like this, centered on the screen
         --  *
         --    *
