@@ -330,6 +330,30 @@ impl<'s> Formation {
                         .build();
                 }
             }
+            Formation::Spiral {
+                enemies: _,
+                amount_in_circle,
+                amount,
+                spacing,
+                speed,
+                enemy_radius,
+            } => {
+                let center = Point2::new(WIDTH / 2., HEIGHT / 2.);
+                let r = enemy_radius;
+                let R = (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r;
+                for i in 0..amount {
+                    let unit =
+                        Rotation2::new(f32::two_pi() / (amount_in_circle as f32) * (i as f32))
+                            * Vector2::new(1., 0.);
+                    lazy.create_entity(&entities)
+                        .with(Transform::from(center + unit * (R + (i as f32) * spacing)))
+                        .with(Moving::from(-unit * speed))
+                        .with(Circle::with_radius(enemy_radius))
+                        .with(Color::rgb(0.9, 0.1, 0.1))
+                        .with(Enemy)
+                        .build();
+                }
+            }
         }
     }
 }

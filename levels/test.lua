@@ -160,3 +160,38 @@ for i = 1, 2 do
         formation_radius = (WIDTH ^ 2 + HEIGHT ^ 2) ^ 0.5,
     })
 end
+
+-- Create a spiral, that is, a series of enemies created in a circle
+-- with increasing radius
+LE.Spawn(F.Spiral {
+    enemies = {BallEnemy.Simple},
+    -- How many enemies should be in a full circunference
+    -- This means the angle between two adjacent circles in this formation
+    -- is 2 * pi / amount_in_circle
+    amount_in_circle = 30,
+    -- Total amount of enemies. May be smaller or larger than amount_in_circle
+    amount = 50,
+    -- "Radial" spacing between enemies. That means the distance from an enemy to
+    -- the center of the formation will increase by this value for each circle
+    spacing = 30,
+    -- Enemy speed (defaults to 10)
+    speed = 10,
+    -- Enemy radius
+    radius = 20,
+})
+-- Use small values of amount_in_circle like this to create a quick spiral around psycho
+
+
+LE.WaitUntilNoEnemies()
+
+-- Or larger values to create a slowly drifting line
+LE.Spawn(F.Spiral {
+    enemies = {BallEnemy.Simple},
+    amount_in_circle = 150,
+    amount = 40,
+    spacing = 60,
+    speed = 10,
+    radius = 20,
+})
+
+LE.WaitUntilNoEnemies()

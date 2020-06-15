@@ -50,7 +50,7 @@ pub enum Formation {
     },
     Multiple {
         enemies: Vec<BallEnemy>,
-        amount: u8,
+        amount: u16,
         #[default = 5.]
         spacing: f32,
         pos: Vec2,
@@ -88,6 +88,16 @@ pub enum Formation {
         formation_radius: Option<f32>,
         formation_center: Option<Vec2>,
     },
+    Spiral {
+        enemies: Vec<BallEnemy>,
+        amount_in_circle: u16,
+        amount: u16,
+        spacing: f32,
+        #[default = 20.]
+        enemy_radius: f32,
+        #[default = 10.]
+        speed: f32,
+    }
 }
 
 #[derive(Debug, Clone, UserData, LuaBuilder)]
