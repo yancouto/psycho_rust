@@ -21,6 +21,35 @@ end
 -- Wait until all enemies leave screen or die
 LE.WaitUntilNoEnemies()
 
+for i = 1, 3 do
+    LE.Spawn(F.VerticalLine {
+        -- Type of enemies
+        enemies = {BallEnemy.Simple},
+        -- Whether the V spawns left or right
+        side = VerticalLineSide.Left,
+        -- Horizontal speed of each ball (Default 15). Always positive!
+        speed = 10,
+        -- How many enemies are Spawned (Must be at most 255, and ODD!)
+        amount = 15,
+        -- Radius of each ball (default 20)
+        radius = 10,
+        -- V means balls are spawned like this, centered on the screen
+        --  *
+        --    *
+        --      *
+        --    *
+        --  *
+        placement = VerticalLinePlacement.V {
+            -- Margin is the distance of the top and bottom enemies to the edge of the screen (default 0)
+            -- If 0, top enemy will be touching the screen
+            margin = 10,
+            -- How far apart adjacent balls are in the X axis.
+            spacing = 10,
+        },
+    })
+    LE.Wait(1.5)
+end
+
 -- Vertical line of ball enemies
 LE.Spawn(F.VerticalLine {
     -- Type of enemies

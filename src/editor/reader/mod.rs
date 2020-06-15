@@ -28,6 +28,7 @@ pub enum VerticalLinePlacement {
     Distribute { margin: Option<f32> },
     FromBottom { margin: Option<f32>, spacing: f32 },
     FromTop { margin: Option<f32>, spacing: f32 },
+    V { margin: Option<f32>, spacing: f32 },
 }
 
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
@@ -35,6 +36,7 @@ pub enum HorizontalLinePlacement {
     Distribute { margin: Option<f32> },
     FromLeft { margin: Option<f32>, spacing: f32 },
     FromRight { margin: Option<f32>, spacing: f32 },
+    V { margin: Option<f32>, spacing: f32 },
 }
 
 #[derive(Debug, Clone, UserData, LuaBuilder)]

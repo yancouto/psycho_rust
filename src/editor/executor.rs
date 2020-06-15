@@ -105,40 +105,64 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
 /// Returns positions for the center of the circles when placing `amount` enemies on a
 /// line of size `width`, using `placement` to decide how to place them.
 fn line_enemy_positions(
+    base_y: f32,
     radius: f32,
     amount: u8,
     width: f32,
     placement: HorizontalLinePlacement,
-) -> Vec<f32> {
+) -> Vec<(f32, f32)> {
     let mut ret = Vec::with_capacity(amount as usize);
     if amount == 0 {
         return ret;
     }
+    let distribute = |margin| -> Vec<f32> {
+        if amount == 1 {
+            return vec![width / 2.];
+        }
+        let mut v = Vec::with_capacity(amount as usize);
+        v.push(margin + radius);
+        for i in 0..(amount - 2) {
+            // Advanced maths to distance balls properly
+            let w = width - 2. * margin - 4. * radius;
+            let (n, d, i) = ((amount - 2) as f32, 2. * radius, i as f32);
+            v.push((w - d * n) / (n + 1.) * (i + 1.) + (i + 1.5) * d + margin);
+        }
+        v.push(width - margin - radius);
+        v
+    };
     match placement {
         HorizontalLinePlacement::Distribute { margin } => {
-            if amount == 1 {
-                return vec![width / 2.];
+            for x in distribute(margin.unwrap_or(0.)).into_iter() {
+                ret.push((x, base_y));
             }
-            let margin = margin.unwrap_or(0.);
-            ret.push(margin + radius);
-            for i in 0..(amount - 2) {
-                // Advanced maths to distance balls properly
-                let w = width - 2. * margin - 4. * radius;
-                let (n, d, i) = ((amount - 2) as f32, 2. * radius, i as f32);
-                ret.push((w - d * n) / (n + 1.) * (i + 1.) + (i + 1.5) * d + margin);
-            }
-            ret.push(width - margin - radius);
         }
         HorizontalLinePlacement::FromLeft { margin, spacing } => {
             let margin = margin.unwrap_or(0.);
             for i in 0..amount {
-                ret.push(margin + (i as f32) * (spacing + 2. * radius) + radius);
+                ret.push((
+                    margin + (i as f32) * (spacing + 2. * radius) + radius,
+                    base_y,
+                ));
             }
         }
         HorizontalLinePlacement::FromRight { margin, spacing } => {
             let margin = margin.unwrap_or(0.);
             for i in 0..amount {
-                ret.push(width - (margin + (i as f32) * (spacing + 2. * radius) + radius));
+                ret.push((
+                    width - (margin + (i as f32) * (spacing + 2. * radius) + radius),
+                    base_y,
+                ));
+            }
+        }
+        HorizontalLinePlacement::V { margin, spacing } => {
+            if amount % 2 == 0 {
+                panic!("With V formation, amount should be odd!");
+            }
+            for (i, x) in distribute(margin.unwrap_or(0.)).into_iter().enumerate() {
+                ret.push((
+                    x,
+                    base_y - ((amount / 2) as i8 - (i as i8)).abs() as f32 * spacing,
+                ));
             }
         }
     }
@@ -149,13 +173,27 @@ fn line_enemy_positions(
 fn test_enemy_positions() {
     assert_eq!(
         line_enemy_positions(
+            -200.,
             10.,
             2,
             100.,
             HorizontalLinePlacement::Distribute { margin: Some(10.) }
         ),
-        vec![20., 80.],
-    )
+        vec![(20., -200.), (80., -200.)],
+    );
+    assert_eq!(
+        line_enemy_positions(
+            0.,
+            10.,
+            3,
+            100.,
+            HorizontalLinePlacement::V {
+                margin: Some(10.),
+                spacing: 10.
+            }
+        ),
+        vec![(20., -10.), (50., 0.), (80., -10.)],
+    );
 }
 
 impl From<VerticalLinePlacement> for HorizontalLinePlacement {
@@ -169,6 +207,9 @@ impl From<VerticalLinePlacement> for HorizontalLinePlacement {
             }
             VerticalLinePlacement::FromBottom { margin, spacing } => {
                 HorizontalLinePlacement::FromRight { margin, spacing }
+            }
+            VerticalLinePlacement::V { margin, spacing } => {
+                HorizontalLinePlacement::V { margin, spacing }
             }
         }
     }
@@ -204,7 +245,7 @@ impl<'s> Formation {
                 } else {
                     (-speed, WIDTH + radius)
                 };
-                for y in line_enemy_positions(radius, amount, HEIGHT, placement.into()) {
+                for (y, x) in line_enemy_positions(x, radius, amount, HEIGHT, placement.into()) {
                     lazy.create_entity(&entities)
                         .with(Transform::new(x, y))
                         .with(Moving::new(speed, 0.))
@@ -227,7 +268,7 @@ impl<'s> Formation {
                 } else {
                     (-speed, HEIGHT + radius)
                 };
-                for x in line_enemy_positions(radius, amount, WIDTH, placement) {
+                for (x, y) in line_enemy_positions(y, radius, amount, WIDTH, placement) {
                     lazy.create_entity(&entities)
                         .with(Transform::new(x, y))
                         .with(Moving::new(0., speed))
