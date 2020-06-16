@@ -371,9 +371,32 @@ impl<L: Level> LevelExecutorSystem<L> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use amethyst::ecs::prelude::*;
+    use amethyst::ecs::world::World;
+    pub struct EmptyLevel;
+
+    impl Level for EmptyLevel {}
+    impl Iterator for EmptyLevel {
+        type Item = LevelEvent;
+        fn next(&mut self) -> Option<LevelEvent> {
+            None
+        }
+    }
+
+    impl LevelExecutorSystem<EmptyLevel> {
+        pub fn new_test() -> Self {
+            Self {
+                level: EmptyLevel,
+                state: State::ReadyForInstruction,
+            }
+        }
+        pub fn test_handle_event(&mut self, event: LevelEvent, world: &mut World) {
+            self.handle_level_event(Some(event), &world.system_data());
+            world.maintain();
+        }
+    }
     #[test]
     fn test_enemy_positions() {
         assert_eq!(
@@ -401,8 +424,9 @@ mod tests {
         );
     }
 
-    fn get_world() -> World {
+    pub fn get_world() -> World {
         let mut world = World::new();
+        world.insert(Time::default());
         register!(Transform, Circle, Color, Moving, BallEnemy -> world);
         world
     }

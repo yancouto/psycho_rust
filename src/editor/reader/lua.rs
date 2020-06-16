@@ -76,9 +76,23 @@ impl Iterator for LuaLevel {
 
 impl Level for LuaLevel {}
 
-#[test]
-fn test_test_level_compiles() {
-    let level = LuaLevel::new(&Path::new("levels/test.lua")).unwrap();
-    // Test if iterator doesn't crash
-    assert_eq!(level.collect::<Vec<_>>().is_empty(), false);
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::editor::executor::{tests::get_world, LevelExecutorSystem};
+    use amethyst::ecs::{world::WorldExt, Join};
+
+    #[test]
+    fn test_test_level_compiles_and_runs() {
+        let mut world = get_world();
+        let level = LuaLevel::new(&Path::new("levels/test.lua")).unwrap();
+        // Test if iterator doesn't crash
+        let events = level.collect::<Vec<_>>();
+        assert_eq!(events.is_empty(), false);
+        let mut executor = LevelExecutorSystem::new_test();
+        for ev in events.into_iter() {
+            executor.test_handle_event(ev, &mut world);
+        }
+        assert_eq!(world.entities().join().count() > 0, true);
+    }
 }
