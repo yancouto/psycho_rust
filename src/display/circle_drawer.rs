@@ -164,12 +164,6 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCircleDesc {
 #[derive(Debug)]
 pub struct RenderCircles;
 
-macro_rules! register {
-    ($($comp:ident),+ -> $world:ident) => {
-        $($world.register::<$comp>();)*
-    }
-}
-
 impl<B: Backend> RenderPlugin<B> for RenderCircles {
     fn on_build<'a, 'b>(
         &mut self,

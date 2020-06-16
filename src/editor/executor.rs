@@ -2,7 +2,7 @@ use amethyst::{
     core::math::{Point2, RealField, Rotation2, Vector2},
     core::timing::Time,
     derive::SystemDesc,
-    ecs::{Entities, LazyUpdate, Read, ReadStorage, System, SystemData},
+    ecs::{world::Builder, Component, Entities, LazyUpdate, Read, ReadStorage, System, SystemData},
     prelude::*,
     utils::application_root_dir,
 };
@@ -14,10 +14,14 @@ use std::time::Duration;
 use crate::{
     components::{Circle, Color, Moving, Transform},
     display::{HEIGHT, WIDTH},
-    editor::reader::{
-        lua::LuaLevel, BallEnemy, Formation, HorizontalLinePlacement, HorizontalLineSide, Level,
-        LevelEvent, VerticalLinePlacement, VerticalLineSide,
+    editor::{
+        reader::{
+            lua::LuaLevel, BallEnemy, Formation, HorizontalLinePlacement, HorizontalLineSide,
+            Level, LevelEvent, VerticalLinePlacement, VerticalLineSide,
+        },
+        Vec2,
     },
+    utils::creator::LazyCreator,
 };
 
 /// Indicates the current state of this level execution in the state machine
@@ -169,33 +173,6 @@ fn line_enemy_positions(
     ret
 }
 
-#[test]
-fn test_enemy_positions() {
-    assert_eq!(
-        line_enemy_positions(
-            -200.,
-            10.,
-            2,
-            100.,
-            HorizontalLinePlacement::Distribute { margin: Some(10.) }
-        ),
-        vec![(20., -200.), (80., -200.)],
-    );
-    assert_eq!(
-        line_enemy_positions(
-            0.,
-            10.,
-            3,
-            100.,
-            HorizontalLinePlacement::V {
-                margin: Some(10.),
-                spacing: 10.
-            }
-        ),
-        vec![(20., -10.), (50., 0.), (80., -10.)],
-    );
-}
-
 impl From<VerticalLinePlacement> for HorizontalLinePlacement {
     fn from(p: VerticalLinePlacement) -> Self {
         match p {
@@ -216,7 +193,7 @@ impl From<VerticalLinePlacement> for HorizontalLinePlacement {
 }
 
 impl<'s> Formation {
-    fn create_formation(self, lazy: &LazyUpdate, entities: &Entities<'s>) {
+    fn create_formation(self, mut creator: LazyCreator) {
         match self {
             Formation::Single {
                 enemy,
@@ -224,7 +201,8 @@ impl<'s> Formation {
                 speed,
                 radius,
             } => {
-                lazy.create_entity(&entities)
+                creator
+                    .create_entity()
                     .with(Transform::from(pos))
                     .with(Circle::with_radius(radius))
                     .with(Color::rgb(0.9, 0.1, 0.1))
@@ -244,7 +222,8 @@ impl<'s> Formation {
                 let dir = Vector2::from(speed).normalize();
                 let pos = Into::<Point2<f32>>::into(pos);
                 for i in 0..amount {
-                    lazy.create_entity(&entities)
+                    creator
+                        .create_entity()
                         .with(Transform::from(
                             pos - dir * (i as f32) * (spacing + 2. * radius),
                         ))
@@ -270,7 +249,8 @@ impl<'s> Formation {
                     (-speed, WIDTH + radius)
                 };
                 for (y, x) in line_enemy_positions(x, radius, amount, HEIGHT, placement.into()) {
-                    lazy.create_entity(&entities)
+                    creator
+                        .create_entity()
                         .with(Transform::new(x, y))
                         .with(Moving::new(speed, 0.))
                         .with(Circle::with_radius(radius))
@@ -294,7 +274,8 @@ impl<'s> Formation {
                     (-speed, HEIGHT + radius)
                 };
                 for (x, y) in line_enemy_positions(y, radius, amount, WIDTH, placement) {
-                    lazy.create_entity(&entities)
+                    creator
+                        .create_entity()
                         .with(Transform::new(x, y))
                         .with(Moving::new(0., speed))
                         .with(Circle::with_radius(radius))
@@ -325,7 +306,8 @@ impl<'s> Formation {
                 for i in 0..amount {
                     let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
                         * Vector2::new(0., -1.);
-                    lazy.create_entity(&entities)
+                    creator
+                        .create_entity()
                         .with(Transform::from(center + unit * R))
                         .with(Moving::from(-unit * speed))
                         .with(Circle::with_radius(enemy_radius))
@@ -350,7 +332,8 @@ impl<'s> Formation {
                     let unit =
                         Rotation2::new(f32::two_pi() / (amount_in_circle as f32) * (i as f32))
                             * Vector2::new(1., 0.);
-                    lazy.create_entity(&entities)
+                    creator
+                        .create_entity()
                         .with(Transform::from(center + unit * (R + (i as f32) * spacing)))
                         .with(Moving::from(-unit * speed))
                         .with(Circle::with_radius(enemy_radius))
@@ -380,9 +363,78 @@ impl<L: Level> LevelExecutorSystem<L> {
             Some(LevelEvent::WaitUntilNoEnemies()) => State::WaitUntilNoEnemies,
             // Create a formation then execute the next event
             Some(LevelEvent::Spawn(f)) => {
-                f.create_formation(lazy, entities);
+                f.create_formation(LazyCreator { lazy, entities });
                 State::ReadyForInstruction
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use amethyst::ecs::prelude::*;
+    #[test]
+    fn test_enemy_positions() {
+        assert_eq!(
+            line_enemy_positions(
+                -200.,
+                10.,
+                2,
+                100.,
+                HorizontalLinePlacement::Distribute { margin: Some(10.) }
+            ),
+            vec![(20., -200.), (80., -200.)],
+        );
+        assert_eq!(
+            line_enemy_positions(
+                0.,
+                10.,
+                3,
+                100.,
+                HorizontalLinePlacement::V {
+                    margin: Some(10.),
+                    spacing: 10.
+                }
+            ),
+            vec![(20., -10.), (50., 0.), (80., -10.)],
+        );
+    }
+
+    fn get_world() -> World {
+        let mut world = World::new();
+        register!(Transform, Circle, Color, Moving, BallEnemy -> world);
+        world
+    }
+
+    #[test]
+    fn test_create_formation() {
+        let mut world = get_world();
+        Formation::Single {
+            enemy: BallEnemy::Simple,
+            pos: Vec2(0., 0.),
+            speed: Vec2(10., 0.),
+            radius: 10.,
+        }
+        .create_formation(LazyCreator {
+            lazy: &world.fetch(),
+            entities: &world.fetch(),
+        });
+        world.maintain();
+        let (ts, cs, ms, es) = (
+            world.read_storage::<Transform>(),
+            world.read_storage::<Circle>(),
+            world.read_storage::<Moving>(),
+            world.read_storage::<BallEnemy>(),
+        );
+        let all = (&world.entities(), &ts, &cs, &ms, &es)
+            .join()
+            .collect::<Vec<_>>();
+        assert_eq!(all.len(), 1);
+        let (_, t, c, m, e) = all[0];
+        assert_eq!(t.0, Point2::new(0., 0.));
+        assert_eq!(c.radius, 10.);
+        assert_eq!(m.0, Vector2::new(10., 0.));
+        assert_eq!(matches!(e, BallEnemy::Simple), true);
     }
 }

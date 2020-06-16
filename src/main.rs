@@ -1,12 +1,15 @@
 //! Psycho: The Ball
 #![allow(warnings)]
 
+#[macro_use]
+mod macros;
 mod components;
 mod display;
 mod editor;
 mod input;
 mod states;
 mod systems;
+mod utils;
 
 use amethyst::{
     input::InputBundle,
