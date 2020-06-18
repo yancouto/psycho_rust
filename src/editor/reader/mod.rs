@@ -9,6 +9,7 @@ use rlua_builders::{LuaBuilder, UserData};
 #[derive(Debug, Clone, Copy, UserData, LuaBuilder)]
 pub enum BallEnemy {
     Simple,
+    Double,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, UserData, LuaBuilder)]

@@ -41,7 +41,7 @@ end
 for i = 1, 3 do
     LE.Spawn(F.VerticalLine {
         -- Type of enemies
-        enemies = {BallEnemy.Simple},
+        enemies = {BallEnemy.Simple, BallEnemy.Double},
         -- Whether the V spawns left or right
         side = VerticalLineSide.Left,
         -- Horizontal speed of each ball (Default 15). Always positive!
@@ -78,7 +78,7 @@ LE.Spawn(F.VerticalLine {
     -- How many enemies are Spawned (Must be at most 255)
     amount = 15,
     -- Radius of each ball (default 20)
-    radius = 10,
+    radius = 25,
     -- How enemies are placed on the line
     -- Distribute means enemies are evenly distributed from top to bottom
     placement = VerticalLinePlacement.Distribute {
@@ -138,7 +138,7 @@ LE.Spawn(F.Circle {
     enemies = {BallEnemy.Simple},
     amount = 12,
     -- Enemy radius (default is 20)
-    enemy_radius = 13,
+    enemy_radius = 19,
     -- Speed of each ball (Default 15). Always positive!
     speed = 10,
     -- Radius of the formation. Defaults to half the screen diagonal + enemy_radius,
