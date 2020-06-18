@@ -3,7 +3,7 @@ use amethyst::ecs::{Component, DenseVecStorage};
 use crate::components::Transform;
 
 /// Component for the circles we wish to draw to the screen
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Clone)]
 pub struct Circle {
     pub radius: f32,
 }

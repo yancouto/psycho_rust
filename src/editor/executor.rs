@@ -25,7 +25,7 @@ use crate::{
 };
 
 impl BallEnemy {
-    fn default_color(&self) -> Color {
+    pub fn default_color(&self) -> Color {
         match self {
             BallEnemy::Simple => Color::rgb(0.1, 0.1, 0.9),
             BallEnemy::Double => Color::rgb(0.95, 0.3, 0.1),

@@ -3,7 +3,7 @@ use amethyst::ecs::{Component, DenseVecStorage};
 
 pub type Position = Point2<f32>;
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone)]
 pub struct Transform(pub Position);
 
 impl Transform {
@@ -18,7 +18,7 @@ impl From<Position> for Transform {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone)]
 pub struct Moving(pub Vector2<f32>);
 
 impl Moving {

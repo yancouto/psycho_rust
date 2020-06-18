@@ -9,7 +9,10 @@ pub struct LazyCreator<'s> {
 }
 
 impl<'s> LazyCreator<'s> {
-    pub fn create_entity(&mut self) -> LazyBuilder<'s> {
+    pub fn new(lazy: &'s LazyUpdate, entities: &'s EntitiesRes) -> Self {
+        Self { lazy, entities }
+    }
+    pub fn create_entity(&self) -> LazyBuilder<'s> {
         self.lazy.create_entity(self.entities)
     }
 }
