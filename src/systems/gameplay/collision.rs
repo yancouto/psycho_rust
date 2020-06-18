@@ -30,18 +30,14 @@ impl BallEnemy {
             BallEnemy::Double => {
                 for i in 0..2 {
                     let rot = Rotation2::new((30. * (i as f32) - 15.).to_radians());
-                    creator
-                        .create_entity()
-                        .with(Transform::from(
-                            transform.0 + moving.0 * time.fixed_seconds(),
-                        ))
-                        .with(Moving::from(rot * moving.0))
-                        .with(Circle {
+                    creator.create_enemy(
+                        BallEnemy::Simple,
+                        Circle {
                             radius: circle.radius * 0.6,
-                        })
-                        .with(BallEnemy::Simple)
-                        .with(BallEnemy::Simple.default_color())
-                        .build();
+                        },
+                        Transform::from(transform.0 + moving.0 * time.fixed_seconds()),
+                        Moving::from(rot * moving.0),
+                    );
                 }
             }
         }

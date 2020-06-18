@@ -24,15 +24,6 @@ use crate::{
     utils::creator::LazyCreator,
 };
 
-impl BallEnemy {
-    pub fn default_color(&self) -> Color {
-        match self {
-            BallEnemy::Simple => Color::rgb(0.1, 0.1, 0.9),
-            BallEnemy::Double => Color::rgb(0.95, 0.3, 0.1),
-        }
-    }
-}
-
 /// Indicates the current state of this level execution in the state machine
 enum State {
     /// Will execute the next instruction ASAP
@@ -203,12 +194,6 @@ impl From<VerticalLinePlacement> for HorizontalLinePlacement {
 
 impl<'s> Formation {
     fn create_formation(self, mut creator: LazyCreator) {
-        let mut create_enemy = |enemy: BallEnemy| {
-            creator
-                .create_entity()
-                .with(enemy)
-                .with(enemy.default_color())
-        };
         match self {
             Formation::Single {
                 enemy,
@@ -216,11 +201,12 @@ impl<'s> Formation {
                 speed,
                 radius,
             } => {
-                create_enemy(enemy)
-                    .with(Transform::from(pos))
-                    .with(Circle::with_radius(radius))
-                    .with(Moving::from(speed))
-                    .build();
+                creator.create_enemy(
+                    enemy,
+                    Circle::with_radius(radius),
+                    Transform::from(pos),
+                    Moving::from(speed),
+                );
             }
             Formation::Multiple {
                 enemies,
@@ -234,13 +220,12 @@ impl<'s> Formation {
                 let dir = Vector2::from(speed).normalize();
                 let pos = Into::<Point2<f32>>::into(pos);
                 for i in 0..amount {
-                    create_enemy(enemies.next().unwrap())
-                        .with(Transform::from(
-                            pos - dir * (i as f32) * (spacing + 2. * radius),
-                        ))
-                        .with(Circle::with_radius(radius))
-                        .with(Moving::from(speed))
-                        .build();
+                    creator.create_enemy(
+                        enemies.next().unwrap(),
+                        Circle::with_radius(radius),
+                        Transform::from(pos - dir * (i as f32) * (spacing + 2. * radius)),
+                        Moving::from(speed),
+                    );
                 }
             }
             Formation::VerticalLine {
@@ -258,11 +243,12 @@ impl<'s> Formation {
                     (-speed, WIDTH + radius)
                 };
                 for (y, x) in line_enemy_positions(x, radius, amount, HEIGHT, placement.into()) {
-                    create_enemy(enemies.next().unwrap())
-                        .with(Transform::new(x, y))
-                        .with(Moving::new(speed, 0.))
-                        .with(Circle::with_radius(radius))
-                        .build();
+                    creator.create_enemy(
+                        enemies.next().unwrap(),
+                        Circle::with_radius(radius),
+                        Transform::new(x, y),
+                        Moving::new(speed, 0.),
+                    );
                 }
             }
             Formation::HorizontalLine {
@@ -280,11 +266,12 @@ impl<'s> Formation {
                     (-speed, HEIGHT + radius)
                 };
                 for (x, y) in line_enemy_positions(y, radius, amount, WIDTH, placement) {
-                    create_enemy(enemies.next().unwrap())
-                        .with(Transform::new(x, y))
-                        .with(Moving::new(0., speed))
-                        .with(Circle::with_radius(radius))
-                        .build();
+                    creator.create_enemy(
+                        enemies.next().unwrap(),
+                        Circle::with_radius(radius),
+                        Transform::new(x, y),
+                        Moving::new(-1., speed),
+                    );
                 }
             }
             Formation::Circle {
@@ -309,11 +296,12 @@ impl<'s> Formation {
                 for i in 0..amount {
                     let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
                         * Vector2::new(0., -1.);
-                    create_enemy(enemies.next().unwrap())
-                        .with(Transform::from(center + unit * R))
-                        .with(Moving::from(-unit * speed))
-                        .with(Circle::with_radius(enemy_radius))
-                        .build();
+                    creator.create_enemy(
+                        enemies.next().unwrap(),
+                        Circle::with_radius(enemy_radius),
+                        Transform::from(center + unit * R),
+                        Moving::from(-unit * speed),
+                    );
                 }
             }
             Formation::Spiral {
@@ -332,11 +320,12 @@ impl<'s> Formation {
                     let unit =
                         Rotation2::new(f32::two_pi() / (amount_in_circle as f32) * (i as f32))
                             * Vector2::new(1., 0.);
-                    create_enemy(enemies.next().unwrap())
-                        .with(Transform::from(center + unit * (R + (i as f32) * spacing)))
-                        .with(Moving::from(-unit * speed))
-                        .with(Circle::with_radius(enemy_radius))
-                        .build();
+                    creator.create_enemy(
+                        enemies.next().unwrap(),
+                        Circle::with_radius(enemy_radius),
+                        Transform::from(center + unit * (R + (i as f32) * spacing)),
+                        Moving::from(-unit * speed),
+                    );
                 }
             }
         }
