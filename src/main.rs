@@ -18,7 +18,7 @@ use amethyst::{
     utils::application_root_dir,
     LogLevelFilter, LoggerConfig,
 };
-use display::circle_drawer::RenderCircles;
+use display::shape_drawer::RenderCircles;
 use input::PsychoBindingTypes;
 use states::MainMenu;
 use systems::MovingSystem;

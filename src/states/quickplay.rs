@@ -9,7 +9,7 @@ use amethyst::{
 use log::info;
 
 use crate::{
-    components::{Circle, Color, Player, Transform},
+    components::{Circle, Color, Player, Transform, Triangle},
     display::{HEIGHT as H, WIDTH as W},
     editor::executor::LevelExecutorSystem,
     states::MainMenu,
@@ -42,6 +42,12 @@ impl<'a, 'b> Quickplay<'a, 'b> {
             .with(Color::rgb(0.3, 0.4, 1.))
             .with(Transform::new(W / 2., H / 2.))
             .with(Player)
+            .build();
+
+        world
+            .create_entity()
+            .with(Color::rgb(1., 1., 1.))
+            .with(Triangle::new([10., 10.], [100., 100.], [100., 10.]))
             .build();
     }
 }

@@ -16,7 +16,7 @@
 //! I don't know if there's an easy way to fix this (or if it matters that much).
 use amethyst::{
     core::ecs::{DispatcherBuilder, Join, ReadStorage, SystemData, World},
-    core::math::Vector2,
+    core::math::{Point2, Vector2},
     prelude::*,
     renderer::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
@@ -41,7 +41,7 @@ use glsl_layout::*;
 use lazy_static::lazy_static;
 
 use crate::{
-    components::{Circle, Color, Transform},
+    components::{Circle, Color, Transform, Triangle},
     display::{HEIGHT, WIDTH},
 };
 
@@ -53,19 +53,46 @@ fn compile_shader(code: &'static str, kind: shaderc::ShaderKind) -> shaderc::Com
 }
 
 lazy_static! {
-    // These uses the precompiled shaders.
-    // These can be obtained using glslc.exe in the vulkan sdk.
-    static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
-        compile_shader(include_str!("../../assets/shaders/circle.vert"), shaderc::ShaderKind::Vertex).as_binary_u8(),
+    static ref VERTEX_CIRCLE: SpirvShader = SpirvShader::from_bytes(
+        compile_shader(
+            include_str!("../../assets/shaders/circle.vert"),
+            shaderc::ShaderKind::Vertex
+        )
+        .as_binary_u8(),
         ShaderStageFlags::VERTEX,
         "main",
-    ).unwrap();
-
-    static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
-        compile_shader(include_str!("../../assets/shaders/circle.frag"), shaderc::ShaderKind::Fragment).as_binary_u8(),
+    )
+    .unwrap();
+    static ref FRAGMENT_CIRCLE: SpirvShader = SpirvShader::from_bytes(
+        compile_shader(
+            include_str!("../../assets/shaders/circle.frag"),
+            shaderc::ShaderKind::Fragment
+        )
+        .as_binary_u8(),
         ShaderStageFlags::FRAGMENT,
         "main",
-    ).unwrap();
+    )
+    .unwrap();
+    static ref VERTEX_SIMPLE: SpirvShader = SpirvShader::from_bytes(
+        compile_shader(
+            include_str!("../../assets/shaders/simple.vert"),
+            shaderc::ShaderKind::Vertex
+        )
+        .as_binary_u8(),
+        ShaderStageFlags::VERTEX,
+        "main",
+    )
+    .unwrap();
+    static ref FRAGMENT_SIMPLE: SpirvShader = SpirvShader::from_bytes(
+        compile_shader(
+            include_str!("../../assets/shaders/simple.frag"),
+            shaderc::ShaderKind::Fragment
+        )
+        .as_binary_u8(),
+        ShaderStageFlags::FRAGMENT,
+        "main",
+    )
+    .unwrap();
 }
 
 fn build_custom_pipeline<B: Backend>(
@@ -74,38 +101,54 @@ fn build_custom_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
     let pipeline_layout = unsafe {
         factory
             .device()
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
-    let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
+    let vertex_circle = unsafe { VERTEX_CIRCLE.module(factory).unwrap() };
+    let fragment_circle = unsafe { FRAGMENT_CIRCLE.module(factory).unwrap() };
+    let vertex_simple = unsafe { VERTEX_SIMPLE.module(factory).unwrap() };
+    let fragment_simple = unsafe { FRAGMENT_SIMPLE.module(factory).unwrap() };
+
+    let default_pipeline_builder = || {
+        PipelineDescBuilder::new()
+            .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
+            .with_layout(&pipeline_layout)
+            .with_subpass(subpass)
+            .with_framebuffer_size(framebuffer_width, framebuffer_height)
+            .with_blend_targets(vec![pso::ColorBlendDesc {
+                mask: pso::ColorMask::ALL,
+                blend: Some(pso::BlendState::ALPHA),
+            }])
+    };
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
-            PipelineDescBuilder::new()
+            default_pipeline_builder()
                 .with_vertex_desc(&[(CircleArgs::vertex(), pso::VertexInputRate::Vertex)])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
                 .with_shaders(util::simple_shader_set(
-                    &shader_vertex,
-                    Some(&shader_fragment),
-                ))
-                .with_layout(&pipeline_layout)
-                .with_subpass(subpass)
-                .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc {
-                    mask: pso::ColorMask::ALL,
-                    blend: Some(pso::BlendState::ALPHA),
-                }]),
+                    &vertex_circle,
+                    Some(&fragment_circle),
+                )),
+        )
+        .with_pipeline(
+            default_pipeline_builder()
+                .with_vertex_desc(&[(TriangleArgs::vertex(), pso::VertexInputRate::Vertex)])
+                .with_shaders(util::simple_shader_set(
+                    &vertex_simple,
+                    Some(&fragment_simple),
+                )),
         )
         .build(factory, None);
 
     unsafe {
-        factory.destroy_shader_module(shader_vertex);
-        factory.destroy_shader_module(shader_fragment);
+        factory.destroy_shader_module(vertex_circle);
+        factory.destroy_shader_module(fragment_circle);
+        factory.destroy_shader_module(vertex_simple);
+        factory.destroy_shader_module(fragment_simple);
     }
 
     match pipes {
@@ -115,20 +158,25 @@ fn build_custom_pipeline<B: Backend>(
             }
             Err(e)
         }
-        Ok(mut pipes) => Ok((pipes.remove(0), pipeline_layout)),
+        Ok(mut pipes) => {
+            debug_assert!(pipes.len() == 2);
+            let pipe2 = pipes.remove(1);
+            let pipe1 = pipes.remove(0);
+            Ok((pipe1, pipe2, pipeline_layout))
+        }
     }
 }
 
 #[derive(Debug)]
-pub struct DrawCircleDesc;
+pub struct DrawShapeDesc;
 
-impl DrawCircleDesc {
+impl DrawShapeDesc {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawCircleDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawShapeDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -141,9 +189,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCircleDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
-        let vertex = DynamicVertexBuffer::new();
-
-        let (pipeline, pipeline_layout) = build_custom_pipeline(
+        let (pipeline_circle, pipeline_triangle, pipeline_layout) = build_custom_pipeline(
             factory,
             subpass,
             framebuffer_width,
@@ -151,13 +197,11 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCircleDesc {
             vec![],
         )?;
 
-        Ok(Box::new(DrawCircle::<B> {
-            pipeline,
+        Ok(Box::new(DrawShape::<B>::new(
+            pipeline_circle,
+            pipeline_triangle,
             pipeline_layout,
-            vertex,
-            vertex_count: 0,
-            change: Default::default(),
-        }))
+        )))
     }
 }
 
@@ -170,7 +214,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCircles {
         world: &mut World,
         _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> amethyst::Result<()> {
-        register!(Color, Circle, Transform -> world);
+        register!(Color, Circle, Transform, Triangle -> world);
         Ok(())
     }
 
@@ -181,7 +225,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCircles {
         _world: &World,
     ) -> amethyst::Result<()> {
         plan.extend_target(Target::Main, |ctx| {
-            ctx.add(RenderOrder::Transparent, DrawCircleDesc::new().builder())?;
+            ctx.add(RenderOrder::Transparent, DrawShapeDesc::new().builder())?;
             Ok(())
         });
         Ok(())
@@ -190,15 +234,37 @@ impl<B: Backend> RenderPlugin<B> for RenderCircles {
 
 /// Draws circles to the screen.
 #[derive(Debug)]
-pub struct DrawCircle<B: Backend> {
-    pipeline: B::GraphicsPipeline,
+pub struct DrawShape<B: Backend> {
+    pipeline_circle: B::GraphicsPipeline,
+    pipeline_triangle: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
-    vertex: DynamicVertexBuffer<B, CircleArgs>,
-    vertex_count: usize,
+    circle_vertex: DynamicVertexBuffer<B, CircleArgs>,
+    circle_count: usize,
+    triangle_vertex: DynamicVertexBuffer<B, TriangleArgs>,
+    triangle_count: usize,
     change: ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawCircle<B> {
+impl<B: Backend> DrawShape<B> {
+    fn new(
+        pipeline_circle: B::GraphicsPipeline,
+        pipeline_triangle: B::GraphicsPipeline,
+        pipeline_layout: B::PipelineLayout,
+    ) -> Self {
+        Self {
+            pipeline_circle,
+            pipeline_triangle,
+            pipeline_layout,
+            circle_vertex: DynamicVertexBuffer::new(),
+            circle_count: 0,
+            triangle_vertex: DynamicVertexBuffer::new(),
+            triangle_count: 0,
+            change: Default::default(),
+        }
+    }
+}
+
+impl<B: Backend> RenderGroup<B, World> for DrawShape<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -207,26 +273,42 @@ impl<B: Backend> RenderGroup<B, World> for DrawCircle<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         world: &World,
     ) -> PrepareResult {
-        let (circles, transforms, colors) = <(
+        let (circles, triangles, transforms, colors) = <(
             ReadStorage<'_, Circle>,
+            ReadStorage<'_, Triangle>,
             ReadStorage<'_, Transform>,
             ReadStorage<'_, Color>,
         )>::fetch(world);
 
         // Create all vertices
-        let vertex_data = (&circles, &transforms, &colors)
+        let circle_data = (&circles, &transforms, &colors)
             .join()
             .flat_map(|(circle, t, color)| circle.get_vertices(t, color))
             .collect::<Box<[CircleArgs]>>();
 
+        let triangle_data = (&triangles, &colors)
+            .join()
+            .flat_map(|(triangle, color)| triangle.get_vertices(color))
+            .collect::<Box<[TriangleArgs]>>();
+
         //Update vertex count and see if it has changed
-        let old_vertex_count = self.vertex_count;
-        self.vertex_count = vertex_data.len();
-        let changed = old_vertex_count != self.vertex_count;
+        let old_vertex_count = self.circle_count;
+        self.circle_count = circle_data.len();
+        let changed = old_vertex_count != self.circle_count;
+
+        let old_vertex_count = self.triangle_count;
+        self.triangle_count = triangle_data.len();
+        let changed = changed || old_vertex_count != self.triangle_count;
 
         // Write the vector to a Vertex buffer
-        self.vertex
-            .write(factory, index, self.vertex_count as u64, Some(vertex_data));
+        self.circle_vertex
+            .write(factory, index, self.circle_count as u64, Some(circle_data));
+        self.triangle_vertex.write(
+            factory,
+            index,
+            self.triangle_count as u64,
+            Some(triangle_data),
+        );
 
         // Return with we can reuse the draw buffers using the utility struct ChangeDetection
         self.change.prepare_result(index, changed)
@@ -240,25 +322,37 @@ impl<B: Backend> RenderGroup<B, World> for DrawCircle<B> {
         _world: &World,
     ) {
         // Don't worry about drawing if there are no vertices. Like before the state adds them to the screen.
-        if self.vertex_count == 0 {
+        if self.circle_count == 0 && self.triangle_count == 0 {
             return;
         }
 
+        // Drawing triangles
+        encoder.bind_graphics_pipeline(&self.pipeline_triangle);
+        self.triangle_vertex.bind(index, 0, 0, &mut encoder);
+        unsafe {
+            encoder.draw(0..self.triangle_count as u32, 0..1);
+        }
+
         // Bind the pipeline to the the encoder
-        encoder.bind_graphics_pipeline(&self.pipeline);
+        encoder.bind_graphics_pipeline(&self.pipeline_circle);
 
         // Bind the vertex buffer to the encoder
-        self.vertex.bind(index, 0, 0, &mut encoder);
+        self.circle_vertex.bind(index, 0, 0, &mut encoder);
 
         // Draw the vertices
         unsafe {
-            encoder.draw(0..self.vertex_count as u32, 0..1);
+            encoder.draw(0..self.circle_count as u32, 0..1);
         }
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
         unsafe {
-            factory.device().destroy_graphics_pipeline(self.pipeline);
+            factory
+                .device()
+                .destroy_graphics_pipeline(self.pipeline_circle);
+            factory
+                .device()
+                .destroy_graphics_pipeline(self.pipeline_triangle);
             factory
                 .device()
                 .destroy_pipeline_layout(self.pipeline_layout);
@@ -294,6 +388,14 @@ impl AsVertex for CircleArgs {
     }
 }
 
+// Transformation from (0, 0) -> (W, H) to (-1, -1) -> (1, 1)
+fn transform_point(p: &Point2<f32>) -> vec2 {
+    let p = (p - Vector2::new(WIDTH / 2., HEIGHT / 2.))
+        .coords
+        .component_div(&Vector2::new(WIDTH / 2., HEIGHT / 2.));
+    [p.x, p.y].into()
+}
+
 impl Circle {
     /// Helper function to convert triangle into 3 vertices
     pub fn get_vertices(&self, t: &Transform, color: &Color) -> Vec<CircleArgs> {
@@ -313,15 +415,46 @@ impl Circle {
             .map(|rel| {
                 // Creating edge of the square
                 let p = c + r * rel;
-                // Transformation from (0, 0) -> (W, H) to (-1, -1) -> (1, 1)
-                let p = (p - Vector2::new(WIDTH / 2., HEIGHT / 2.))
-                    .coords
-                    .component_div(&Vector2::new(WIDTH / 2., HEIGHT / 2.));
                 CircleArgs {
-                    pos: [p.x, p.y].into(),
+                    pos: transform_point(&p),
                     color,
                     rel: [rel.x, rel.y].into(),
                 }
+            })
+            .collect()
+    }
+}
+
+/// Vertex Arguments to pass into shader.
+/// Check the shader at assets/shaders/simple.vert
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(4))]
+pub struct TriangleArgs {
+    pub pos: vec2,
+    pub color: vec4,
+}
+
+/// Required to send data into the shader.
+/// These names must match the shader.
+impl AsVertex for TriangleArgs {
+    fn vertex() -> VertexFormat {
+        VertexFormat::new((
+            // vec2 pos;
+            (Format::Rg32Sfloat, "pos"),
+            // vec4 color;
+            (Format::Rgba32Sfloat, "color"),
+        ))
+    }
+}
+
+impl Triangle {
+    pub fn get_vertices(&self, color: &Color) -> Vec<TriangleArgs> {
+        let color = color.inner().into();
+        self.vertices
+            .iter()
+            .map(|v| TriangleArgs {
+                pos: transform_point(&v),
+                color,
             })
             .collect()
     }
