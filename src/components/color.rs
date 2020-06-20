@@ -1,7 +1,7 @@
 use amethyst::ecs::{Component, DenseVecStorage};
 
 /// Components that have a single color and are drawn on screen
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone)]
 pub struct Color(pub [f32; 4]);
 
 impl Color {

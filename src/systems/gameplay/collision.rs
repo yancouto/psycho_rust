@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::{
-    components::{circle::collides, BallEnemy, Circle, InScreen, Moving, Shot, Transform},
+    components::{circle::collides, BallEnemy, Circle, Color, InScreen, Moving, Shot, Transform},
     systems::particles::create_explosion,
     utils::creator::LazyCreator,
 };
@@ -23,8 +23,9 @@ impl BallEnemy {
         transform: &Transform,
         moving: &Moving,
         circle: &Circle,
+        color: &Color,
     ) {
-        create_explosion(&time, &creator, transform.0, circle.radius, 25);
+        create_explosion(&time, &creator, transform.0, circle.radius, 25, color);
         match self {
             BallEnemy::Simple => {}
             BallEnemy::Double => {
@@ -58,11 +59,12 @@ impl<'s> System<'s> for CollisionSystem {
         ReadStorage<'s, Moving>,
         ReadStorage<'s, Circle>,
         ReadStorage<'s, InScreen>,
+        ReadStorage<'s, Color>,
     );
 
     fn run(
         &mut self,
-        (time, lazy, entities, shots, enemies, transforms, movings, circles, in_screens): Self::SystemData,
+        (time, lazy, entities, shots, enemies, transforms, movings, circles, in_screens, colors): Self::SystemData,
     ) {
         let enemies = (
             &entities,
@@ -71,30 +73,38 @@ impl<'s> System<'s> for CollisionSystem {
             &movings,
             &circles,
             &in_screens,
+            &colors,
         )
             .join()
             .map(|x| (AtomicBool::new(false), x))
             .collect::<Vec<_>>();
         let creator = LazyCreator::new(&lazy, &entities);
-        (&entities, &shots, &transforms, &circles, &in_screens)
+        (
+            &entities,
+            &shots,
+            &transforms,
+            &circles,
+            &in_screens,
+            &colors,
+        )
             // Let's use multiple threads because why not
             // If this really becomes a problem, there are faster ways to
             // implement this collision
             .par_join()
-            .for_each(|(s_id, _shot, s_t, s_c, _in_screen)| {
-                for (dead, (e_id, _enemy, e_t, _e_m, e_c, _in_screen)) in enemies.iter() {
+            .for_each(|(s_id, _shot, s_t, s_c, _in_screen, s_color)| {
+                for (dead, (e_id, _enemy, e_t, _e_m, e_c, _in_screen, _e_color)) in enemies.iter() {
                     if collides(e_t, e_c, s_t, s_c, 0.) {
                         entities.delete(s_id).unwrap();
-                        create_explosion(&time, &creator, s_t.0, s_c.radius, 10);
+                        create_explosion(&time, &creator, s_t.0, s_c.radius, 10, s_color);
                         dead.store(true, Ordering::Relaxed);
                         break;
                     }
                 }
             });
-        for (dead, (e_id, enemy, e_t, e_m, e_c, _)) in enemies {
+        for (dead, (e_id, enemy, e_t, e_m, e_c, _, e_color)) in enemies {
             if dead.into_inner() {
                 entities.delete(e_id).unwrap();
-                enemy.on_destroy(&time, &creator, e_t, e_m, e_c);
+                enemy.on_destroy(&time, &creator, e_t, e_m, e_c, e_color);
             }
         }
     }

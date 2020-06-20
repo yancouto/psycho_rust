@@ -25,6 +25,7 @@ pub fn create_explosion(
     center: Point2<f32>,
     radius: f32,
     n: u8,
+    color: &Color,
 ) {
     let now = time.absolute_time().as_secs_f32();
     let mut rng = rand::thread_rng();
@@ -39,7 +40,7 @@ pub fn create_explosion(
             .with(Transform::from(center + unit1 * radius * 0.75))
             .with(Moving::from(unit2 * (1.5 + rnd() * 1.5)))
             .with(Circle::with_radius(2.))
-            .with(Color::rgb(1., 1., 1.))
+            .with(color.clone())
             .with(Particle {
                 created: now,
                 lifetime: 0.5 + rnd() * 1.,
