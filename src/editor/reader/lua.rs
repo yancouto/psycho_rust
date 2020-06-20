@@ -88,11 +88,20 @@ mod test {
         let level = LuaLevel::new(&Path::new("levels/test.lua")).unwrap();
         // Test if iterator doesn't crash
         let events = level.collect::<Vec<_>>();
-        assert_eq!(events.is_empty(), false);
+        assert!(!events.is_empty());
         let mut executor = LevelExecutorSystem::new_test();
+        let mut entities = 0;
         for ev in events.into_iter() {
-            executor.test_handle_event(ev, &mut world);
+            executor.test_handle_event(ev.clone(), &mut world);
+            if let LevelEvent::Spawn(f) = ev {
+                let new_entities = world.entities().join().count();
+                assert!(
+                    new_entities > entities,
+                    format!("Formation didn't create any enemies: {:?}", f)
+                );
+                entities = new_entities;
+            }
         }
-        assert_eq!(world.entities().join().count() > 0, true);
+        assert!(world.entities().join().count() > 0);
     }
 }

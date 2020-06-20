@@ -12,7 +12,10 @@ use log::debug;
 use std::time::Duration;
 
 use crate::{
-    components::{Circle, Color, Moving, Transform},
+    components::{
+        enemy_spawner::{EnemySpawner, EnemySpawnerLogic, SpawnSpeed},
+        Circle, Color, Moving, Transform,
+    },
     display::{HEIGHT, WIDTH},
     editor::{
         reader::{
@@ -192,22 +195,59 @@ impl From<VerticalLinePlacement> for HorizontalLinePlacement {
     }
 }
 
+#[derive(Debug)]
+struct SingleSpawnerLogic {
+    enemy: BallEnemy,
+    radius: f32,
+}
+
+impl EnemySpawnerLogic for SingleSpawnerLogic {
+    fn do_spawn(&self, creator: &LazyCreator, pos: Point2<f32>, speed: Vector2<f32>) {
+        creator.create_enemy(
+            self.enemy,
+            Circle::with_radius(self.radius),
+            Transform::from(pos),
+            Moving::from(speed),
+        );
+    }
+}
+
+#[derive(Debug)]
+struct MultipleSpawnerLogic {
+    enemies: Vec<BallEnemy>,
+    amount: u16,
+    spacing: f32,
+    radius: f32,
+}
+
+impl EnemySpawnerLogic for MultipleSpawnerLogic {
+    fn do_spawn(&self, creator: &LazyCreator, pos: Point2<f32>, speed: Vector2<f32>) {
+        let mut enemies = self.enemies.iter().cycle();
+        let dir = Vector2::from(speed).normalize();
+        for i in 0..self.amount {
+            creator.create_enemy(
+                enemies.next().unwrap().clone(),
+                Circle::with_radius(self.radius),
+                Transform::from(pos - dir * (i as f32) * (self.spacing + 2. * self.radius)),
+                Moving::from(speed),
+            );
+        }
+    }
+}
+
 impl<'s> Formation {
-    fn create_formation(self, mut creator: LazyCreator) {
+    fn get_spawners(self) -> Vec<EnemySpawner> {
         match self {
             Formation::Single {
                 enemy,
                 pos,
                 speed,
                 radius,
-            } => {
-                creator.create_enemy(
-                    enemy,
-                    Circle::with_radius(radius),
-                    Transform::from(pos),
-                    Moving::from(speed),
-                );
-            }
+            } => vec![EnemySpawner {
+                position: pos.into(),
+                spawn_speed: SpawnSpeed::Fixed(speed.into()),
+                logic: Box::new(SingleSpawnerLogic { enemy, radius }),
+            }],
             Formation::Multiple {
                 enemies,
                 amount,
@@ -215,19 +255,16 @@ impl<'s> Formation {
                 pos,
                 speed,
                 radius,
-            } => {
-                let mut enemies = enemies.into_iter().cycle();
-                let dir = Vector2::from(speed).normalize();
-                let pos = Into::<Point2<f32>>::into(pos);
-                for i in 0..amount {
-                    creator.create_enemy(
-                        enemies.next().unwrap(),
-                        Circle::with_radius(radius),
-                        Transform::from(pos - dir * (i as f32) * (spacing + 2. * radius)),
-                        Moving::from(speed),
-                    );
-                }
-            }
+            } => vec![EnemySpawner {
+                position: pos.into(),
+                spawn_speed: SpawnSpeed::Fixed(speed.into()),
+                logic: Box::new(MultipleSpawnerLogic {
+                    enemies,
+                    amount,
+                    spacing,
+                    radius,
+                }),
+            }],
             Formation::VerticalLine {
                 enemies,
                 side,
@@ -242,14 +279,17 @@ impl<'s> Formation {
                 } else {
                     (-speed, WIDTH + radius)
                 };
-                for (y, x) in line_enemy_positions(x, radius, amount, HEIGHT, placement.into()) {
-                    creator.create_enemy(
-                        enemies.next().unwrap(),
-                        Circle::with_radius(radius),
-                        Transform::new(x, y),
-                        Moving::new(speed, 0.),
-                    );
-                }
+                line_enemy_positions(x, radius, amount, HEIGHT, placement.into())
+                    .into_iter()
+                    .map(|(y, x)| EnemySpawner {
+                        position: Point2::new(x, y),
+                        spawn_speed: SpawnSpeed::Fixed(Vector2::new(speed, 0.)),
+                        logic: Box::new(SingleSpawnerLogic {
+                            enemy: enemies.next().unwrap(),
+                            radius,
+                        }),
+                    })
+                    .collect()
             }
             Formation::HorizontalLine {
                 enemies,
@@ -265,14 +305,17 @@ impl<'s> Formation {
                 } else {
                     (-speed, HEIGHT + radius)
                 };
-                for (x, y) in line_enemy_positions(y, radius, amount, WIDTH, placement) {
-                    creator.create_enemy(
-                        enemies.next().unwrap(),
-                        Circle::with_radius(radius),
-                        Transform::new(x, y),
-                        Moving::new(-1., speed),
-                    );
-                }
+                line_enemy_positions(y, radius, amount, WIDTH, placement)
+                    .into_iter()
+                    .map(|(x, y)| EnemySpawner {
+                        position: Point2::new(x, y),
+                        spawn_speed: SpawnSpeed::Fixed(Vector2::new(0., speed)),
+                        logic: Box::new(SingleSpawnerLogic {
+                            enemy: enemies.next().unwrap(),
+                            radius,
+                        }),
+                    })
+                    .collect()
             }
             Formation::Circle {
                 enemies,
@@ -293,16 +336,20 @@ impl<'s> Formation {
                 let r = enemy_radius;
                 let R = formation_radius
                     .unwrap_or_else(|| (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r);
-                for i in 0..amount {
-                    let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
-                        * Vector2::new(0., -1.);
-                    creator.create_enemy(
-                        enemies.next().unwrap(),
-                        Circle::with_radius(enemy_radius),
-                        Transform::from(center + unit * R),
-                        Moving::from(-unit * speed),
-                    );
-                }
+                (0..amount)
+                    .map(|i| {
+                        let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
+                            * Vector2::new(0., -1.);
+                        EnemySpawner {
+                            position: center + unit * R,
+                            spawn_speed: SpawnSpeed::Fixed(-unit * speed),
+                            logic: Box::new(SingleSpawnerLogic {
+                                enemy: enemies.next().unwrap(),
+                                radius: enemy_radius,
+                            }),
+                        }
+                    })
+                    .collect()
             }
             Formation::Spiral {
                 enemies,
@@ -316,17 +363,21 @@ impl<'s> Formation {
                 let center = Point2::new(WIDTH / 2., HEIGHT / 2.);
                 let r = enemy_radius;
                 let R = (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r;
-                for i in 0..amount {
-                    let unit =
-                        Rotation2::new(f32::two_pi() / (amount_in_circle as f32) * (i as f32))
-                            * Vector2::new(1., 0.);
-                    creator.create_enemy(
-                        enemies.next().unwrap(),
-                        Circle::with_radius(enemy_radius),
-                        Transform::from(center + unit * (R + (i as f32) * spacing)),
-                        Moving::from(-unit * speed),
-                    );
-                }
+                (0..amount)
+                    .map(|i| {
+                        let unit =
+                            Rotation2::new(f32::two_pi() / (amount_in_circle as f32) * (i as f32))
+                                * Vector2::new(1., 0.);
+                        EnemySpawner {
+                            position: center + unit * (R + (i as f32) * spacing),
+                            spawn_speed: SpawnSpeed::Fixed(-unit * speed),
+                            logic: Box::new(SingleSpawnerLogic {
+                                enemy: enemies.next().unwrap(),
+                                radius: enemy_radius,
+                            }),
+                        }
+                    })
+                    .collect()
             }
         }
     }
@@ -349,7 +400,10 @@ impl<L: Level> LevelExecutorSystem<L> {
             Some(LevelEvent::WaitUntilNoEnemies()) => State::WaitUntilNoEnemies,
             // Create a formation then execute the next event
             Some(LevelEvent::Spawn(f)) => {
-                f.create_formation(LazyCreator { lazy, entities });
+                let creator = LazyCreator { lazy, entities };
+                for spawner in f.get_spawners() {
+                    spawner.do_spawn(&creator);
+                }
                 State::ReadyForInstruction
             }
         }
@@ -418,18 +472,21 @@ pub mod tests {
     }
 
     #[test]
-    fn test_create_formation() {
+    fn test_create_single() {
         let mut world = get_world();
-        Formation::Single {
+        let spawners = Formation::Single {
             enemy: BallEnemy::Simple,
             pos: Vec2(0., 0.),
             speed: Vec2(10., 0.),
             radius: 10.,
         }
-        .create_formation(LazyCreator {
-            lazy: &world.fetch(),
-            entities: &world.fetch(),
-        });
+        .get_spawners();
+        for spawner in spawners {
+            spawner.do_spawn(&LazyCreator {
+                lazy: &world.fetch(),
+                entities: &world.fetch(),
+            });
+        }
         world.maintain();
         let (ts, cs, ms, es) = (
             world.read_storage::<Transform>(),
