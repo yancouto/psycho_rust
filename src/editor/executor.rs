@@ -68,11 +68,15 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
         Entities<'s>,
         Read<'s, LazyUpdate>,
         ReadStorage<'s, BallEnemy>,
+        ReadStorage<'s, EnemySpawner>,
     );
+
+    fn setup(&mut self, world: &mut World) {
+        world.register::<EnemySpawner>();
+    }
 
     fn run(&mut self, data: Self::SystemData) {
         let time = &data.0;
-        let enemies = &data.3;
         loop {
             match self.state {
                 // Finished -- do nothing
@@ -87,7 +91,9 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
                 }
                 // NoEnemies -- continue waiting if there are enemies
                 State::WaitUntilNoEnemies => {
-                    if enemies.is_empty() {
+                    let enemies = &data.3;
+                    let spawners = &data.4;
+                    if enemies.is_empty() && spawners.is_empty() {
                         self.state = State::ReadyForInstruction;
                     } else {
                         return;
@@ -247,6 +253,7 @@ impl<'s> Formation {
                 position: pos.into(),
                 spawn_speed: SpawnSpeed::Fixed(speed.into()),
                 logic: Box::new(SingleSpawnerLogic { enemy, radius }),
+                spawn_at: 0.,
             }],
             Formation::Multiple {
                 enemies,
@@ -264,6 +271,7 @@ impl<'s> Formation {
                     spacing,
                     radius,
                 }),
+                spawn_at: 0.,
             }],
             Formation::VerticalLine {
                 enemies,
@@ -288,6 +296,7 @@ impl<'s> Formation {
                             enemy: enemies.next().unwrap(),
                             radius,
                         }),
+                        spawn_at: 0.,
                     })
                     .collect()
             }
@@ -314,6 +323,7 @@ impl<'s> Formation {
                             enemy: enemies.next().unwrap(),
                             radius,
                         }),
+                        spawn_at: 0.,
                     })
                     .collect()
             }
@@ -347,6 +357,7 @@ impl<'s> Formation {
                                 enemy: enemies.next().unwrap(),
                                 radius: enemy_radius,
                             }),
+                            spawn_at: 0.,
                         }
                     })
                     .collect()
@@ -375,6 +386,7 @@ impl<'s> Formation {
                                 enemy: enemies.next().unwrap(),
                                 radius: enemy_radius,
                             }),
+                            spawn_at: 0.,
                         }
                     })
                     .collect()
@@ -403,6 +415,22 @@ impl<L: Level> LevelExecutorSystem<L> {
                 let creator = LazyCreator { lazy, entities };
                 for spawner in f.get_spawners() {
                     spawner.do_spawn(&creator);
+                }
+                State::ReadyForInstruction
+            }
+            Some(LevelEvent::SpawnWithIndicator {
+                formation,
+                duration,
+            }) => {
+                let creator = LazyCreator { lazy, entities };
+                for spawner in formation.get_spawners() {
+                    creator
+                        .create_entity()
+                        .with(EnemySpawner {
+                            spawn_at: time.absolute_time_seconds() + duration,
+                            ..spawner
+                        })
+                        .build();
                 }
                 State::ReadyForInstruction
             }
@@ -467,7 +495,7 @@ pub mod tests {
     pub fn get_world() -> World {
         let mut world = World::new();
         world.insert(Time::default());
-        register!(Transform, Circle, Color, Moving, BallEnemy -> world);
+        register!(Transform, Circle, Color, Moving, BallEnemy, EnemySpawner -> world);
         world
     }
 

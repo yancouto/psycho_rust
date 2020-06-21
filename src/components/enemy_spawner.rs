@@ -38,4 +38,5 @@ pub struct EnemySpawner {
     pub position: Point2<f32>,
     pub spawn_speed: SpawnSpeed,
     pub logic: Box<dyn EnemySpawnerLogic>,
+    pub spawn_at: f64,
 }

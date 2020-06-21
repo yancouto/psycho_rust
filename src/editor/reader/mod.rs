@@ -106,6 +106,7 @@ pub enum LevelEvent {
     Wait(f32),
     WaitUntilNoEnemies(),
     Spawn(Formation),
+    SpawnWithIndicator { formation: Formation, duration: f64 },
 }
 
 pub trait Level: Iterator<Item = LevelEvent> {}

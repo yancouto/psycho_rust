@@ -21,6 +21,19 @@ end
 -- Wait until all enemies leave screen or die
 LE.WaitUntilNoEnemies()
 
+-- This spawns an enemy, but first waits for the given amount of seconds
+-- and shows an indicator showing where it is coming from and it's direction
+LE.SpawnWithIndicator {
+    duration = 2,
+    formation = F.Single {
+        enemy = BallEnemy.Simple,
+        pos = {WIDTH / 2, -20},
+        speed = {0, 10},
+    }
+}
+
+LE.WaitUntilNoEnemies()
+
 for i = 1, 3 do
     -- Spawn multiple balls in a line
     LE.Spawn(F.Multiple {
