@@ -45,6 +45,7 @@ enum State {
 pub struct LevelExecutorSystem<L: Level> {
     level: L,
     state: State,
+    indicator_duration: f64,
 }
 
 impl LevelExecutorSystem<LuaLevel> {
@@ -58,6 +59,7 @@ impl LevelExecutorSystem<LuaLevel> {
         Self {
             level,
             state: State::ReadyForInstruction,
+            indicator_duration: 1.,
         }
     }
 }
@@ -399,8 +401,9 @@ impl<L: Level> LevelExecutorSystem<L> {
     fn handle_level_event(
         &mut self,
         event: Option<LevelEvent>,
-        (time, entities, lazy, ..): &<Self as System>::SystemData,
+        data: &<Self as System>::SystemData,
     ) -> State {
+        let (time, entities, lazy, ..) = data;
         match event {
             // Last event
             None => State::Finished,
@@ -410,30 +413,40 @@ impl<L: Level> LevelExecutorSystem<L> {
             },
             // Sleep until no enemies are on screen
             Some(LevelEvent::WaitUntilNoEnemies()) => State::WaitUntilNoEnemies,
-            // Create a formation then execute the next event
-            Some(LevelEvent::Spawn(f)) => {
-                let creator = LazyCreator { lazy, entities };
-                for spawner in f.get_spawners() {
-                    spawner.do_spawn(&creator);
-                }
+            // Change default indicator duration
+            Some(LevelEvent::SetDefaultIndicatorDuration(duration)) => {
+                self.indicator_duration = duration;
                 State::ReadyForInstruction
             }
-            Some(LevelEvent::SpawnWithIndicator {
+            // Create a formation using the default indicator duration
+            Some(LevelEvent::Spawn(formation)) => self.handle_level_event(
+                Some(LevelEvent::SpawnWithCustomIndicator {
+                    formation,
+                    duration: self.indicator_duration,
+                }),
+                data,
+            ),
+            // Create a formation then execute the next event
+            Some(LevelEvent::SpawnWithCustomIndicator {
                 formation,
                 duration,
             }) => {
                 let creator = LazyCreator { lazy, entities };
                 for spawner in formation.get_spawners() {
-                    creator
-                        .create_entity()
-                        .with(EnemySpawner {
-                            spawn_at: time.absolute_time_seconds() + duration,
-                            ..spawner
-                        })
-                        .with(Color::rgb(1., 1., 1.))
-                        // This will be fixed by EnemySpawnerSystem
-                        .with(Triangle::new([-1., -1.], [-1., -1.], [-1., -1.]))
-                        .build();
+                    if duration <= 0. {
+                        spawner.do_spawn(&creator);
+                    } else {
+                        creator
+                            .create_entity()
+                            .with(EnemySpawner {
+                                spawn_at: time.absolute_time_seconds() + duration,
+                                ..spawner
+                            })
+                            .with(Color::rgb(1., 1., 1.))
+                            // This will be fixed by EnemySpawnerSystem
+                            .with(Triangle::new([-1., -1.], [-1., -1.], [-1., -1.]))
+                            .build();
+                    }
                 }
                 State::ReadyForInstruction
             }
@@ -461,6 +474,7 @@ pub mod tests {
             Self {
                 level: EmptyLevel,
                 state: State::ReadyForInstruction,
+                indicator_duration: 0.,
             }
         }
         pub fn test_handle_event(&mut self, event: LevelEvent, world: &mut World) {

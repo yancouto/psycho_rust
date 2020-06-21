@@ -1,6 +1,9 @@
 local F = Formation
 local LE = LevelEvent
 
+-- Changes the default indicator duration. By default it is 1.
+LE.SetDefaultIndicatorDuration(0.5)
+
 for i = 1, 3 do
     -- Wait for 1s before doing anything else
     LE.Wait(1)
@@ -21,10 +24,10 @@ end
 -- Wait until all enemies leave screen or die
 LE.WaitUntilNoEnemies()
 
--- This spawns an enemy, but first waits for the given amount of seconds
--- and shows an indicator showing where it is coming from and it's direction
-LE.SpawnWithIndicator {
-    duration = 2,
+-- This spawns an enemy using a custom indicator duration, without changing
+-- the default
+LE.SpawnWithCustomIndicator {
+    duration = 5,
     formation = F.Single {
         enemy = BallEnemy.Simple,
         pos = {WIDTH / 2, -20},
@@ -33,6 +36,8 @@ LE.SpawnWithIndicator {
 }
 
 LE.WaitUntilNoEnemies()
+
+LE.SetDefaultIndicatorDuration(1.)
 
 for i = 1, 3 do
     -- Spawn multiple balls in a line
