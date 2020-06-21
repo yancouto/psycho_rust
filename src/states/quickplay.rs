@@ -43,12 +43,6 @@ impl<'a, 'b> Quickplay<'a, 'b> {
             .with(Transform::new(W / 2., H / 2.))
             .with(Player)
             .build();
-
-        world
-            .create_entity()
-            .with(Color::rgb(1., 1., 1.))
-            .with(Triangle::new([10., 10.], [100., 100.], [100., 10.]))
-            .build();
     }
 }
 

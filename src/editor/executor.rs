@@ -14,7 +14,7 @@ use std::time::Duration;
 use crate::{
     components::{
         enemy_spawner::{EnemySpawner, EnemySpawnerLogic, SpawnSpeed},
-        Circle, Color, Moving, Transform,
+        Circle, Color, Moving, Transform, Triangle,
     },
     display::{HEIGHT, WIDTH},
     editor::{
@@ -430,6 +430,9 @@ impl<L: Level> LevelExecutorSystem<L> {
                             spawn_at: time.absolute_time_seconds() + duration,
                             ..spawner
                         })
+                        .with(Color::rgb(1., 1., 1.))
+                        // This will be fixed by EnemySpawnerSystem
+                        .with(Triangle::new([-1., -1.], [-1., -1.], [-1., -1.]))
                         .build();
                 }
                 State::ReadyForInstruction
@@ -495,7 +498,7 @@ pub mod tests {
     pub fn get_world() -> World {
         let mut world = World::new();
         world.insert(Time::default());
-        register!(Transform, Circle, Color, Moving, BallEnemy, EnemySpawner -> world);
+        register!(Transform, Circle, Color, Moving, BallEnemy, EnemySpawner, Triangle -> world);
         world
     }
 
