@@ -1,4 +1,5 @@
 use amethyst::{
+    core::math::Vector2,
     core::timing::Time,
     derive::SystemDesc,
     ecs::{Entities, Join, LazyUpdate, Read, ReadStorage, System, SystemData, WriteStorage},
@@ -13,9 +14,22 @@ use crate::{
 #[derive(SystemDesc, Default)]
 pub struct EnemySpawnerSystem;
 
+const MARGIN: f32 = 20.;
+const SIZE: f32 = 18.;
+
 impl EnemySpawner {
     fn adjust_indicator(&self, triangle: &mut Triangle) {
-        *triangle = Triangle::new([10., 10.], [100., 100.], [100., 10.])
+        let mut center = self.position;
+        center.x = center.x.clamp(MARGIN, W - MARGIN);
+        center.y = center.y.clamp(MARGIN, H - MARGIN);
+        let unit = self.calc_speed(None).normalize();
+        // Perpendicular to unit
+        let perp = Vector2::new(-unit.y, unit.x);
+        triangle.vertices = [
+            center + unit * SIZE,
+            center - unit * SIZE + perp * SIZE / 2.,
+            center - unit * SIZE - perp * SIZE / 2.,
+        ];
     }
 }
 

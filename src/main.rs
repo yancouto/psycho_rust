@@ -1,5 +1,6 @@
 //! Psycho: The Ball
 #![allow(warnings)]
+#![feature(clamp)]
 
 #[macro_use]
 mod macros;
