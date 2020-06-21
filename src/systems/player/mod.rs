@@ -1,5 +1,5 @@
 mod collision;
-mod movement;
+pub mod movement;
 mod shoot;
 
 pub use collision::CollisionSystem;

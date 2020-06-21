@@ -15,19 +15,16 @@ pub enum SpawnSpeed {
 }
 
 impl EnemySpawner {
-    pub fn calc_speed(&self, player_pos: Option<Point2<f32>>) -> Vector2<f32> {
+    pub fn calc_speed(&self, player_pos: Point2<f32>) -> Vector2<f32> {
         match self.spawn_speed {
             SpawnSpeed::Fixed(s) => s,
-            SpawnSpeed::AimAtPlayer { speed } => {
-                (player_pos.unwrap_or_else(|| Point2::new(0., 0.)) - self.position).normalize()
-                    * speed
-            }
+            SpawnSpeed::AimAtPlayer { speed } => (player_pos - self.position).normalize() * speed,
         }
     }
 
-    pub fn do_spawn(&self, creator: &LazyCreator) {
+    pub fn do_spawn(&self, creator: &LazyCreator, player_pos: Point2<f32>) {
         self.logic
-            .do_spawn(creator, self.position, self.calc_speed(None));
+            .do_spawn(creator, self.position, self.calc_speed(player_pos));
     }
 }
 

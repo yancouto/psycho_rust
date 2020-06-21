@@ -24,6 +24,7 @@ use crate::{
         },
         Vec2,
     },
+    systems::player::movement::PlayerPosition,
     utils::creator::LazyCreator,
 };
 
@@ -71,6 +72,7 @@ impl<'s, L: Level> System<'s> for LevelExecutorSystem<L> {
         Read<'s, LazyUpdate>,
         ReadStorage<'s, BallEnemy>,
         ReadStorage<'s, EnemySpawner>,
+        Read<'s, PlayerPosition>,
     );
 
     fn setup(&mut self, world: &mut World) {
@@ -434,7 +436,8 @@ impl<L: Level> LevelExecutorSystem<L> {
                 let creator = LazyCreator { lazy, entities };
                 for spawner in formation.get_spawners() {
                     if duration <= 0. {
-                        spawner.do_spawn(&creator);
+                        let player_pos: &PlayerPosition = &data.5;
+                        spawner.do_spawn(&creator, player_pos.0);
                     } else {
                         creator
                             .create_entity()
@@ -512,6 +515,7 @@ pub mod tests {
     pub fn get_world() -> World {
         let mut world = World::new();
         world.insert(Time::default());
+        world.insert(PlayerPosition::default());
         register!(Transform, Circle, Color, Moving, BallEnemy, EnemySpawner, Triangle -> world);
         world
     }
@@ -527,10 +531,13 @@ pub mod tests {
         }
         .get_spawners();
         for spawner in spawners {
-            spawner.do_spawn(&LazyCreator {
-                lazy: &world.fetch(),
-                entities: &world.fetch(),
-            });
+            spawner.do_spawn(
+                &LazyCreator {
+                    lazy: &world.fetch(),
+                    entities: &world.fetch(),
+                },
+                Point2::new(0., 0.),
+            );
         }
         world.maintain();
         let (ts, cs, ms, es) = (
