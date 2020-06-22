@@ -106,7 +106,12 @@ pub enum LevelEvent {
     Wait(f32),
     WaitUntilNoEnemies(),
     Spawn(Formation),
-    SpawnWithCustomIndicator { formation: Formation, duration: f64 },
+    CustomSpawn {
+        formation: Formation,
+        indicator_duration: Option<f64>,
+        #[default = false]
+        follow_player: bool,
+    },
     SetDefaultIndicatorDuration(f64),
 }
 

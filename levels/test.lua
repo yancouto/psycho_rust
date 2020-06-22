@@ -24,10 +24,14 @@ end
 -- Wait until all enemies leave screen or die
 LE.WaitUntilNoEnemies()
 
--- This spawns an enemy using a custom indicator duration, without changing
--- the default
-LE.SpawnWithCustomIndicator {
-    duration = 5,
+-- This spawns an enemy using custom configurations
+LE.CustomSpawn {
+    -- How long will the indicator show on screen. Has a default.
+    indicator_duration = 6,
+    -- Whether this spawning should instead point at the player.
+    -- Speeds directions are disregarded and only the length of the speed vector counts.
+    -- Default is false.
+    follow_player = true,
     formation = F.Single {
         enemy = BallEnemy.Simple,
         pos = {WIDTH / 2, -20},

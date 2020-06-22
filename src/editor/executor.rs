@@ -422,19 +422,27 @@ impl<L: Level> LevelExecutorSystem<L> {
             }
             // Create a formation using the default indicator duration
             Some(LevelEvent::Spawn(formation)) => self.handle_level_event(
-                Some(LevelEvent::SpawnWithCustomIndicator {
+                Some(LevelEvent::CustomSpawn {
                     formation,
-                    duration: self.indicator_duration,
+                    indicator_duration: None,
+                    follow_player: false,
                 }),
                 data,
             ),
             // Create a formation then execute the next event
-            Some(LevelEvent::SpawnWithCustomIndicator {
+            Some(LevelEvent::CustomSpawn {
                 formation,
-                duration,
+                indicator_duration,
+                follow_player,
             }) => {
+                let duration = indicator_duration.unwrap_or(self.indicator_duration);
                 let creator = LazyCreator { lazy, entities };
-                for spawner in formation.get_spawners() {
+                for mut spawner in formation.get_spawners() {
+                    if follow_player {
+                        spawner.spawn_speed = SpawnSpeed::AimAtPlayer {
+                            speed: spawner.calc_speed(Point2::new(0., 0.)).norm(),
+                        };
+                    }
                     if duration <= 0. {
                         let player_pos: &PlayerPosition = &data.5;
                         spawner.do_spawn(&creator, player_pos.0);
