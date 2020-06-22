@@ -51,6 +51,8 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
         info!("Started quickplay on level {}!", self.level_name);
         let mut dispatch = DispatcherBuilder::new()
             .with_pool((*data.world.read_resource::<ArcThreadPool>()).clone())
+            .with(MoveSystem::default(), "player_move", &[])
+            .with_barrier()
             .with(
                 LevelExecutorSystem::from_lua(&self.level_name),
                 "level_exec",
@@ -58,7 +60,6 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
             )
             .with(LeaveScreenSystem::default(), "leave_screen", &[])
             .with(CollisionSystem::default(), "collision", &["leave_screen"])
-            .with(MoveSystem::default(), "player_move", &[])
             .with(
                 PlayerCollisionSystem::default(),
                 "player_collision",
