@@ -1040,6 +1040,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52ba6eb47c2131e784a38b726eb54c1e1484904f013e576a25354d0124161af6"
 
 [[package]]
+name = "dunce"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2641c4a7c0c4101df53ea572bffdc561c146f6c2eb09e4df02bc4811e3feeb4"
+
+[[package]]
 name = "dwrote"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2360,6 +2366,7 @@ version = "0.0.1"
 dependencies = [
  "amethyst",
  "derive_more",
+ "dunce",
  "failure",
  "glsl-layout",
  "lazy_static",

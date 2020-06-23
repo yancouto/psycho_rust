@@ -4,7 +4,6 @@ use amethyst::{
     derive::SystemDesc,
     ecs::{world::Builder, Component, Entities, LazyUpdate, Read, ReadStorage, System, SystemData},
     prelude::*,
-    utils::application_root_dir,
 };
 
 use log::debug;
@@ -25,7 +24,7 @@ use crate::{
         Vec2,
     },
     systems::player::movement::PlayerPosition,
-    utils::creator::LazyCreator,
+    utils::{creator::LazyCreator, fs::root},
 };
 
 /// Indicates the current state of this level execution in the state machine
@@ -51,12 +50,8 @@ pub struct LevelExecutorSystem<L: Level> {
 
 impl LevelExecutorSystem<LuaLevel> {
     pub fn from_lua(level_name: &str) -> Self {
-        let level = LuaLevel::new(
-            &application_root_dir()
-                .unwrap()
-                .join(format!("levels/{}.lua", level_name)),
-        )
-        .expect("Failed to load level");
+        let level = LuaLevel::new(&root().join(format!("levels/{}.lua", level_name)))
+            .expect("Failed to load level");
         Self {
             level,
             state: State::ReadyForInstruction,

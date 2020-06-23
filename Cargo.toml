@@ -17,6 +17,7 @@ rayon = "1"
 rlua = "0.17"
 rlua-builders = "0.1.3"
 rand = "0.7.3"
+dunce = "1"
 
 [target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies.amethyst]
 version = "0.15"

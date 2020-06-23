@@ -16,20 +16,20 @@ use amethyst::{
     input::InputBundle,
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
-    utils::application_root_dir,
     LogLevelFilter, LoggerConfig,
 };
 use display::shape_drawer::RenderCircles;
 use input::PsychoBindingTypes;
 use states::MainMenu;
 use systems::MovingSystem;
+use utils::fs::root;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(LoggerConfig {
         level_filter: LogLevelFilter::Debug,
         ..Default::default()
     });
-    let app_root = application_root_dir().expect("Failed to get app root dir");
+    let app_root = root();
     let game_data = GameDataBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
