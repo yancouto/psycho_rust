@@ -29,7 +29,7 @@ impl SimpleState for MainMenu {
             ..
         }) = event
         {
-            Trans::Switch(Box::new(Quickplay::new("test".to_owned())))
+            Trans::Switch(Box::new(Quickplay::new("level1".to_owned())))
         } else {
             Trans::None
         }

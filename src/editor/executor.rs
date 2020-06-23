@@ -336,6 +336,7 @@ impl<'s> Formation {
                 amount,
                 speed,
                 enemy_radius,
+                starting_angle,
                 formation_radius,
                 formation_center,
             } => {
@@ -352,8 +353,9 @@ impl<'s> Formation {
                     .unwrap_or_else(|| (WIDTH * WIDTH + HEIGHT * HEIGHT).sqrt() / 2. + r);
                 (0..amount)
                     .map(|i| {
-                        let unit = Rotation2::new(f32::two_pi() / (amount as f32) * (i as f32))
-                            * Vector2::new(0., -1.);
+                        let unit = Rotation2::new(
+                            starting_angle + f32::two_pi() / (amount as f32) * (i as f32),
+                        ) * Vector2::new(0., -1.);
                         EnemySpawner {
                             position: center + unit * R,
                             spawn_speed: SpawnSpeed::Fixed(-unit * speed),

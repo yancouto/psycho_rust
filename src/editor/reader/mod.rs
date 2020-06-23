@@ -86,6 +86,8 @@ pub enum Formation {
         speed: f32,
         #[default = 20.]
         enemy_radius: f32,
+        #[default = 0.]
+        starting_angle: f32,
         formation_radius: Option<f32>,
         formation_center: Option<Vec2>,
     },

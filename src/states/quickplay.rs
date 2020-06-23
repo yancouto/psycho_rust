@@ -38,7 +38,7 @@ impl<'a, 'b> Quickplay<'a, 'b> {
     fn initialize_balls(&mut self, world: &mut World) {
         world
             .create_entity()
-            .with(Circle::with_radius(30.))
+            .with(Circle::with_radius(24.))
             .with(Color::rgb(0.3, 0.4, 1.))
             .with(Transform::new(W / 2., H / 2.))
             .with(Player)

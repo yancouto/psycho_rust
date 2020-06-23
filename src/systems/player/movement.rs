@@ -13,7 +13,7 @@ use crate::{
 #[derive(SystemDesc, Default)]
 pub struct MoveSystem;
 
-const PSYCHO_SPEED: f32 = 10.;
+const PSYCHO_SPEED: f32 = 8.;
 
 #[derive(Debug, Clone)]
 pub struct PlayerPosition(pub Point2<f32>);
