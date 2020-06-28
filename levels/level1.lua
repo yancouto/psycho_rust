@@ -9,6 +9,9 @@ local r = 25
 local top_bottom = {HorizontalLineSide.Top, HorizontalLineSide.Bottom}
 local left_right = {VerticalLineSide.Left, VerticalLineSide.Right}
 
+-- ===== PART 1: The start of the end =====
+
+-- First single ball
 LE.CustomSpawn {
     indicator_duration = 3,
     formation = F.Single {
@@ -18,19 +21,17 @@ LE.CustomSpawn {
         speed = {s / 2, 0},
     }
 }
-
 LE.WaitUntilNoEnemies()
-LE.Wait(0.25)
 
+-- A few balls from all directions
+LE.Wait(0.25)
 LE.Spawn(F.Single { enemy = SB, radius = r, pos = {WIDTH / 2, -r}, speed = {0, s}})
 LE.Spawn(F.Single { enemy = SB, radius = r, pos = {WIDTH / 2, HEIGHT + r}, speed = {0, -s}})
-
 LE.Wait(1.25)
-
 LE.Spawn(F.Circle { enemies = {SB}, enemy_radius = r, speed = s, amount = 4 })
-
 LE.WaitUntilNoEnemies()
 
+-- A few lines from all directions, ended by an X
 LE.Spawn(F.VerticalLine {
     enemies = {SB},
     side = VerticalLineSide.Left,
@@ -41,9 +42,7 @@ LE.Spawn(F.VerticalLine {
         margin = 10,
     }
 })
-
 LE.Wait(2)
-
 for _, side in ipairs(top_bottom) do
     LE.Spawn(F.HorizontalLine {
         enemies = {SB},
@@ -57,8 +56,7 @@ for _, side in ipairs(top_bottom) do
     })
     LE.Wait(.5)
 end
-
-LE.Wait(1.5)
+LE.Wait(1.1)
 LE.CustomSpawn {
     indicator_duration = 0.5,
     formation = F.Circle {
@@ -69,9 +67,9 @@ LE.CustomSpawn {
         speed = s * 1.25,
     }
 }
-
 LE.WaitUntilNoEnemies()
 
+-- Multiple Vs from the left
 for i = 1, 5 do
     LE.CustomSpawn {
         indicator_duration = 0.5,
@@ -88,11 +86,11 @@ for i = 1, 5 do
     }
     LE.Wait(0.35)
 end
-
 LE.WaitUntilNoEnemies()
+
+
+-- Lines from all sides that close around you
 LE.Wait(1)
-
-
 for _, side in ipairs(top_bottom) do
     for _, placement in ipairs { HorizontalLinePlacement.FromLeft, HorizontalLinePlacement.FromRight } do
         LE.Spawn(F.HorizontalLine {
@@ -108,9 +106,7 @@ for _, side in ipairs(top_bottom) do
         })
     end
 end
-
 LE.Wait(1.5)
-
 for _, side in ipairs(top_bottom) do
     LE.Spawn(F.HorizontalLine {
         enemies = {SB},
@@ -123,9 +119,7 @@ for _, side in ipairs(top_bottom) do
         }
     })
 end
-
 LE.Wait(0.5)
-
 for _, side in ipairs(left_right) do
     LE.Spawn(F.VerticalLine {
         enemies = {SB},
@@ -138,9 +132,9 @@ for _, side in ipairs(left_right) do
         }
     })
 end
-
 LE.WaitUntilNoEnemies()
 
+-- First double ball
 LE.CustomSpawn {
     indicator_duration = 2,
     formation = F.Single {
@@ -154,12 +148,22 @@ LE.CustomSpawn {
 LE.Wait(3)
 LE.WaitUntilNoEnemies()
 
+-- First wave of doubles
+-- Multiple coming from the right plus some vertical and horizontal formations
 LE.Spawn(F.Multiple {
     enemies = {DB},
     amount = 45,
     speed = {-s, 0},
     pos = {WIDTH + r, HEIGHT / 2},
     radius = r,
+})
+LE.Spawn(F.VerticalLine {
+    enemies = {DB},
+    amount = math.floor((HEIGHT / 2) / (2 * r + 10)),
+    speed = s,
+    radius = r,
+    side = VerticalLineSide.Right,
+    placement = VerticalLinePlacement.FromTop { margin = 10, spacing = 10 }
 })
 LE.Wait(3)
 LE.Spawn(F.HorizontalLine {
@@ -180,3 +184,38 @@ LE.Spawn(F.VerticalLine {
     placement = VerticalLinePlacement.Distribute { margin = 10 }
 })
 LE.WaitUntilNoEnemies()
+
+
+-- Second wave of doubles
+-- Two multiples coming from the top followed by horizontal lines from top and bottom
+LE.Wait(1.5)
+for i = 1, 2 do
+    LE.Spawn(F.Multiple {
+        enemies = {DB},
+        amount = 50,
+        speed = {0, s * 0.6},
+        pos = {i * WIDTH / 3, -r},
+        radius = r,
+    })
+end
+LE.Wait(3)
+local function from_top_and_bottom(enemies, base_amount, speed)
+    for i, side in ipairs(top_bottom) do
+        LE.Spawn(F.HorizontalLine {
+            enemies = enemies,
+            amount = base_amount + i,
+            side = side,
+            placement = HorizontalLinePlacement.Distribute { margin = 10 },
+            speed = speed or s,
+            radius = r,
+        })
+    end
+end
+from_top_and_bottom({SB}, 10)
+LE.Wait(4)
+from_top_and_bottom({SB, DB}, 14)
+LE.Wait(4)
+from_top_and_bottom({DB}, 16, s * 0.9)
+LE.WaitUntilNoEnemies()
+
+-- ====== PART 2: Circle Madness ======
