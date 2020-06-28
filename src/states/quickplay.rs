@@ -9,7 +9,7 @@ use amethyst::{
 use log::info;
 
 use crate::{
-    components::{Circle, Color, Player, Transform, Triangle},
+    components::{Circle, Color, EnemySpawner, Player, Transform, Triangle},
     display::{HEIGHT as H, WIDTH as W},
     editor::executor::LevelExecutorSystem,
     states::MainMenu,
@@ -81,8 +81,18 @@ impl<'a, 'b> SimpleState for Quickplay<'a, 'b> {
 
     fn on_stop(&mut self, data: StateData<GameData>) {
         // Delete all circles
-        let (entities, circles): (Entities, ReadStorage<'_, Circle>) = data.world.system_data();
-        for (c_id, circle) in (&entities, &circles).join() {
+        let (entities, circles, enemy_spawners, triangles): (
+            Entities,
+            ReadStorage<'_, Circle>,
+            ReadStorage<'_, EnemySpawner>,
+            ReadStorage<'_, Triangle>,
+        ) = data.world.system_data();
+        for (c_id, _) in (
+            &entities,
+            circles.mask() | enemy_spawners.mask() | triangles.mask(),
+        )
+            .join()
+        {
             entities.delete(c_id).unwrap();
         }
     }
